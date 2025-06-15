@@ -1,0 +1,21 @@
+{
+  "root": {
+    "index.js": "Main entry point for the bot",
+    ".env": "Environment variables (TOKEN, CLIENT_ID, GUILD_ID, TWITCH_CLIENT_ID, TWITCH_SECRET, LIVE_CHANNEL_ID)",
+    "package.json": "NPM config file with scripts and dependencies",
+    "commands": {
+      "registerCommands.js": "Registers slash commands with Discord"
+    },
+    "handlers": {
+      "interactionHandler.js": "Handles slash command responses"
+    },
+    "tasks": {
+      "sendLiveGrid.js": "Posts or updates Twitch live embed message"
+    },
+    "data": {
+      "masterList.json": "List of all Twitch streamers being tracked",
+      "liveMessageCache.json": "Stores message ID of live embed for updates"
+    },
+    ".gitignore": "Standard ignore file to hide node_modules, .env, etc."
+  }
+}

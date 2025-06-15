@@ -1,0 +1,24 @@
+{
+  "#slayus_gbtv": {
+    "enabled": true,
+    "lastShoutedOut": {},
+    "masterList": [
+      "slayus_gbtv",
+      "kaytro_hanma",
+      "ipandalily"
+    ]
+  },
+  "#kaytro_hanma": {
+    "enabled": false,
+    "lastShoutedOut": {},
+    "masterList": [
+      "kaytro_hanma",
+      "slayus_gbtv"
+    ]
+  },
+  "#mo_thedarkone": {
+    "enabled": true,
+    "lastShoutedOut": {},
+    "masterList": []
+  }
+}

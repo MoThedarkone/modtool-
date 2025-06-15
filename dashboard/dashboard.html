@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>🎮 Live Dashboard</title>
+  <style>
+    body {
+      background-color: #1e1e2f;
+      color: #fff;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      padding: 2rem;
+      margin: 0;
+    }
+
+    h1 {
+      color: #9b59b6;
+    }
+
+    .message {
+      border-bottom: 1px solid #444;
+      margin-bottom: 1rem;
+      padding-bottom: 1rem;
+    }
+
+    .username {
+      font-weight: bold;
+      color: #4cd137;
+    }
+
+    .platform {
+      background: #353b48;
+      border-radius: 4px;
+      padding: 2px 6px;
+      font-size: 0.8rem;
+      margin-left: 8px;
+      color: #00a8ff;
+    }
+
+    .content {
+      margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+  <h1>📡 Chat Relay Dashboard</h1>
+  <div id="messages"></div>
+
+  <script>
+    const messagesDiv = document.getElementById('messages');
+    const socket = new WebSocket(`ws://${location.host}`);
+
+    socket.addEventListener('open', () => {
+      console.log('🧠 [Dashboard] Connected to WebSocket');
+    });
+
+    socket.addEventListener('message', (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        const msgDiv = document.createElement('div');
+        msgDiv.className = 'message';
+
+        msgDiv.innerHTML = `
+          <span class="username">${data.username}</span>
+          <span class="platform">[${data.platform?.toUpperCase() || 'N/A'}]</span>
+          <div class="content">${data.content}</div>
+        `;
+
+        messagesDiv.prepend(msgDiv);
+      } catch (err) {
+        console.error('❌ Failed to render message:', err);
+      }
+    });
+
+    socket.addEventListener('close', () => {
+      console.warn('🔌 [Dashboard] WebSocket connection closed');
+    });
+
+    socket.addEventListener('error', (err) => {
+      console.error('⚠️ [Dashboard] WebSocket error:', err);
+    });
+  </script>
+</body>
+</html>

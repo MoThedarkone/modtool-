@@ -1,0 +1,41 @@
+body {
+  background: #18181b;
+  color: #fafafa;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+#chat-container {
+  max-width: 600px;
+  margin: 32px auto;
+  background: #23272a;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 16px #0006;
+}
+h1 {
+  text-align: center;
+  color: #a277ff;
+  margin-bottom: 24px;
+}
+#chat-log {
+  height: 380px;
+  overflow-y: scroll;
+  background: #202225;
+  border-radius: 8px;
+  padding: 10px;
+  margin-bottom: 18px;
+  font-size: 1rem;
+}
+.chat-message {
+  margin-bottom: 8px;
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+.chat-message.discord { background: #5865F2; color: #fff; }
+.chat-message.twitch { background: #9146FF; color: #fff; }
+.chat-message.youtube { background: #FF0000; color: #fff; }
+.sender {
+  font-weight: bold;
+  margin-right: 8px;
+}
