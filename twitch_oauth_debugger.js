@@ -1,12 +1,12 @@
 require('dotenv').config();
 const express = require('express');
 const fetch = require('node-fetch');
-const open = require('open');
 
 const CLIENT_ID = process.env.TWITCH_CLIENT_ID;
 const CLIENT_SECRET = process.env.TWITCH_SECRET;
-const REDIRECT_URI = "http://localhost:3000/callback";
-const PORT = 3000;
+
+// ✅ Northflank public callback URI (do not change this if already set in Twitch dev console)
+const REDIRECT_URI = "https://site--modtool--2y2w4frcxrmv.code.run/callback";
 
 const SCOPES = [
   "chat:read",
@@ -19,54 +19,48 @@ const SCOPES = [
 
 const app = express();
 
-// Step 2: Handle the OAuth callback
+// 🌐 OAuth callback endpoint
 app.get("/callback", async (req, res) => {
   const code = req.query.code;
   if (!code) {
     res.status(400).send("Missing 'code' parameter.");
-    console.error("❌ No authorization code found in callback URL.");
+    console.error("❌ No authorization code in callback URL.");
     return;
   }
 
-  console.log("🔐 Received code:", code);
-  const url = "https://id.twitch.tv/oauth2/token";
-  const params = new URLSearchParams({
+  console.log("🔐 Received Twitch code:", code);
+
+  const tokenParams = new URLSearchParams({
     client_id: CLIENT_ID,
     client_secret: CLIENT_SECRET,
     code,
     grant_type: "authorization_code",
-    redirect_uri: REDIRECT_URI
+    redirect_uri: REDIRECT_URI,
   });
 
-  console.log("📡 Sending POST to:", url);
-  console.log("📦 Payload:", Object.fromEntries(params.entries()));
-
   try {
-    const response = await fetch(url, {
+    const response = await fetch("https://id.twitch.tv/oauth2/token", {
       method: "POST",
-      body: params
+      body: tokenParams,
     });
 
     const result = await response.json();
-    console.log("📬 Response from Twitch:", result);
-
-    if (response.status !== 200) {
-      console.error(`❌ Failed to exchange code. Status: ${response.status}`);
-    }
+    console.log("📬 Twitch token response:", result);
 
     res.send(`
-      <h2>OAuth Token Exchange Complete</h2>
+      <h2>✅ OAuth Complete</h2>
       <pre>${JSON.stringify(result, null, 2)}</pre>
-      <p>Check your console for details.</p>
+      <p>Copy your access and refresh tokens into your <code>.env</code> file!</p>
     `);
   } catch (err) {
-    console.error("❌ Error during fetch:", err);
-    res.status(500).send("Internal Server Error. Check console for details.");
+    console.error("❌ Token exchange failed:", err);
+    res.status(500).send("Error exchanging token. Check logs.");
   }
 });
 
-// Step 1: Generate the auth URL and open in browser
-app.listen(PORT, async () => {
+// 🟢 Northflank sets the port automatically
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
   const authUrl = new URL("https://id.twitch.tv/oauth2/authorize");
   authUrl.searchParams.set("response_type", "code");
   authUrl.searchParams.set("client_id", CLIENT_ID);
@@ -74,15 +68,6 @@ app.listen(PORT, async () => {
   authUrl.searchParams.set("scope", SCOPES);
   authUrl.searchParams.set("force_verify", "true");
 
-  console.log("\n🔗 Open the following URL in your browser:");
+  console.log("\n🔗 Open this in your browser to start Twitch authorization:");
   console.log(authUrl.toString());
-
-  try {
-    await open(authUrl.toString());
-    console.log("🌐 Browser opened for Twitch OAuth login.");
-  } catch {
-    console.log("⚠️ Could not auto-open browser. Please copy the URL manually.");
-  }
-
-  console.log("🌍 Listening on http://localhost:" + PORT);
 });
