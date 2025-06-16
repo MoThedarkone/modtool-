@@ -1,5 +1,3 @@
-// tasks/sendLiveGrid.js
-
 require('dotenv').config();
 const { EmbedBuilder } = require('discord.js');
 const fetch = require('node-fetch');
@@ -14,7 +12,7 @@ const MESSAGE_CACHE_PATH = path.join(__dirname, '../data/liveMessageCache.json')
 const gamerReplies = {
   noLive: [
     'Nobody’s live right now... go touch some grass and check back later. 🌿',
-    'Squad’s AFK. Time to refill your G-Fuel and chill.',
+    'Squad’s AFK. Time to refill your G‑Fuel and chill.',
     'It’s quiet... too quiet. No streams for now, my dude.',
     'All streamers are on cooldown. Come back in a bit, legend.',
   ],
@@ -134,7 +132,7 @@ const sendLiveGrid = async (client) => {
           await oldMsg.edit({ embeds: [embedMessage] });
         } catch (err) {
           if (err.code === 10008) {
-            console.warn(`⚠️ [Grid] Cached message not found (ID: ${messageId}) — recreating it.`);
+            console.warn(`⚠️ [Grid] Cached message not found (ID: ${messageId}) — reposting it.`);
             const newMessage = await channel.send({ embeds: [embedMessage] });
             fs.writeFileSync(MESSAGE_CACHE_PATH, JSON.stringify({ messageId: newMessage.id }));
           } else {
@@ -177,7 +175,7 @@ const sendLiveGrid = async (client) => {
         await oldMsg.edit({ embeds });
       } catch (err) {
         if (err.code === 10008) {
-          console.warn(`⚠️ [Grid] Cached message not found (ID: ${messageId}) — recreating.`);
+          console.warn(`⚠️ [Grid] Cached message not found (ID: ${messageId}) — reposting it.`);
           const newMessage = await channel.send({ embeds });
           fs.writeFileSync(MESSAGE_CACHE_PATH, JSON.stringify({ messageId: newMessage.id }));
         } else {
