@@ -8,14 +8,15 @@ const app = express();
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server });
 
-const PORT = process.env.DASHBOARD_PORT || 3002;
+// ✅ Use Northflank-assigned PORT or fallback to local port
+const PORT = process.env.PORT || process.env.DASHBOARD_PORT || 3002;
 
-// ✅ Use absolute path to serve static files from dashboard folder
+// ✅ Serve static assets (if you have any in this folder)
 app.use(express.static(path.join(__dirname, '.')));
 
 let dashboardClients = [];
 
-// ✅ WebSocket Connection Tracking
+// ✅ Handle WebSocket connections
 wss.on('connection', (ws) => {
   console.log('🧩 [WebSocket] New dashboard client connected');
   dashboardClients.push(ws);
@@ -30,7 +31,7 @@ wss.on('connection', (ws) => {
   });
 });
 
-// ✅ Relay chat messages to all dashboard clients
+// ✅ Broadcast incoming messages to all clients
 function relayChatMessage(msg) {
   dashboardClients.forEach(ws => {
     if (ws.readyState === ws.OPEN) {
@@ -40,14 +41,17 @@ function relayChatMessage(msg) {
   console.log('📡 [Dashboard] Relayed chat message to clients:', msg);
 }
 
-// ✅ Serve the dashboard HTML
+// ✅ Main dashboard endpoint
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'dashboard.html'));
 });
 
-// ✅ Start server
+// ✅ Start server (let Northflank route the URL)
 server.listen(PORT, () => {
-  console.log(`🖥️ Dashboard running at http://localhost:${PORT}`);
+  console.log(`🖥️ Dashboard running on port ${PORT}`);
+  if (process.env.NF_PUBLIC_URL) {
+    console.log(`🌍 Visit it at: ${process.env.NF_PUBLIC_URL}`);
+  }
 });
 
 module.exports = { relayChatMessage };
