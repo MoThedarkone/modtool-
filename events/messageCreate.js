@@ -37,7 +37,7 @@ module.exports = async (message, client) => {
 
     const content = message.content.toLowerCase();
 
-    // DM Handler
+    // 📨 DM logic
     if (message.channel.isDMBased()) {
       console.log('📩 DM received from:', message.author.tag);
 
@@ -98,11 +98,9 @@ module.exports = async (message, client) => {
         console.error('❌ [DM] Error:', error);
         return message.channel.send("Uh oh, I couldn't process your DM right now. Try again later!");
       }
-
-      return;
     }
 
-    // Server moderation starts here
+    // 🧨 "Mayhem" filter (always enforced)
     if (mayhemRegex.test(content)) {
       try {
         await message.delete();
@@ -119,9 +117,13 @@ module.exports = async (message, client) => {
       } catch (err) {
         console.error('❌ [messageCreate] Mayhem moderation error:', err);
       }
-
       return;
     }
+
+    // 🔞 Adult site filter (mods exempt)
+    const isMod = message.member?.roles.cache.some(role =>
+      ['MODERATOR', 'ADMIN'].includes(role.name.toUpperCase())
+    );
 
     const badPatterns = [
       /pornhub/i,
@@ -131,12 +133,8 @@ module.exports = async (message, client) => {
       /xxx/i,
       /sex/i,
       /\.xxx/,
-      /discord\.gg\/[\w-]+/i,
+      /discord\.gg\/[\w-]+/i
     ];
-
-    const isMod = message.member?.roles.cache.some(role =>
-      ['MODERATOR', 'ADMIN'].includes(role.name.toUpperCase())
-    );
 
     if (!isMod && (badPatterns.some(pat => pat.test(content)) || adultSiteRegex.some(rx => rx.test(content)))) {
       try {
