@@ -46,12 +46,7 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'dashboard.html'));
 });
 
-// ✅ Start server (let Northflank route the URL)
-server.listen(PORT, () => {
-  console.log(`🖥️ Dashboard running on port ${PORT}`);
-  if (process.env.NF_PUBLIC_URL) {
-    console.log(`🌍 Visit it at: ${process.env.NF_PUBLIC_URL}`);
-  }
-});
+// ❌ Removed standalone server.listen() to prevent port collision
 
 module.exports = { relayChatMessage };
+
