@@ -26,7 +26,7 @@ require('./backend/twitchClipListener');
 const app = express();
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server });
-const PORT = process.env.PORT || 3002;
+const PORT = process.env.PORT || 8080; // ✅ Use 8080 for Northflank
 let dashboardClients = [];
 
 app.use(express.static(path.join(__dirname, '.')));
@@ -91,6 +91,7 @@ const client = new Client({
   partials: [Partials.Channel],
 });
 
+console.log('🔑 BOT_TOKEN:', process.env.BOT_TOKEN ? '[LOADED]' : '[MISSING]');
 console.log('📍 Twitch Redirect URI:', process.env.TWITCH_REDIRECT_URI);
 
 client.on('huggingfaceApiCall', (username, messageContent) => {
@@ -163,7 +164,9 @@ client.on('guildMemberAdd', require('./events/guildMemberAdd'));
 client.on('guildMemberRemove', require('./events/guildMemberRemove'));
 client.on('guildBanAdd', require('./events/guildBanAdd'));
 
-client.login(process.env.BOT_TOKEN);
+client.login(process.env.BOT_TOKEN).catch(err => {
+  console.error('❌ Discord login failed:', err);
+});
 
 // === 🚀 LAUNCH DASHBOARD SERVER ===
 server.listen(PORT, () => {
