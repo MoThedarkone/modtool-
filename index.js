@@ -19,7 +19,7 @@ const { relayChatMessage } = require('./dashboard/dashboard');
 
 // 🟩 Twitch integrations
 require('./backend/twitchShoutoutManager');
-require('./backend/twitchLiveAnnouncer');
+const twitchAnnouncer = require('./backend/twitchLiveAnnouncer'); // ✅ renamed and used below
 require('./backend/twitchClipListener');
 
 // === 🔧 DASHBOARD SERVER + CALLBACK ===
@@ -102,15 +102,25 @@ client.on('huggingfaceApiCall', (username, messageContent) => {
 
 client.once('ready', () => {
   console.log(`🎮 ${client.user.tag} is online`);
+
+  // ✅ Start Twitch live grid updater
   setInterval(() => sendLiveGrid(client), 5 * 60 * 1000);
-  setInterval(() => announceLiveStreamers(client), 2 * 60 * 1000);
+
+  // ✅ Start Twitch live announcement embed system
+  twitchAnnouncer.init(client); // 🟢 now actively runs the announcer
+
+  // ✅ Start status tracking
   updateStats(client);
   setInterval(() => updateStats(client), 10 * 60 * 1000);
+
+  // ✅ Start free game tracker
   const sharedChannelId = process.env.STEAM_GAMES_CHANNEL_ID;
   if (sharedChannelId) {
     fetchAllFreeGames(client, sharedChannelId);
     setInterval(() => fetchAllFreeGames(client, sharedChannelId), 30 * 60 * 1000);
   }
+
+  // ✅ Start autorole handler
   if (interactionHandler.autoRoleHandler) {
     interactionHandler.autoRoleHandler(client);
   }
