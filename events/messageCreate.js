@@ -37,7 +37,6 @@ module.exports = async (message, client) => {
 
     const content = message.content.toLowerCase();
 
-    // 📨 DM logic
     if (message.channel.isDMBased()) {
       console.log('📩 DM received from:', message.author.tag);
 
@@ -74,7 +73,7 @@ module.exports = async (message, client) => {
             'X-Title': 'SLAY-GBTV GamerBot'
           },
           body: JSON.stringify({
-            model: 'openai/gpt-3.5-turbo',
+            model: 'openchat/openchat-7b', // ✅ Changed from openai/gpt-3.5-turbo
             messages: [
               {
                 role: 'system',
@@ -98,62 +97,59 @@ module.exports = async (message, client) => {
         console.error('❌ [DM] Error:', error);
         return message.channel.send("Uh oh, I couldn't process your DM right now. Try again later!");
       }
-    }
+    } else {
+      if (mayhemRegex.test(content)) {
+        try {
+          await message.delete();
 
-    // 🧨 "Mayhem" filter (always enforced)
-    if (mayhemRegex.test(content)) {
-      try {
-        await message.delete();
-
-        const modLogChannelId = process.env.MOD_LOG_CHANNEL_ID;
-        if (modLogChannelId) {
-          const modLogChannel = await client.channels.fetch(modLogChannelId);
-          if (modLogChannel) {
-            await modLogChannel.send(`🚫 **"Mayhem" Filter** - Message from <@${message.author.id}> in <#${message.channel.id}>:\n\`${message.content}\``);
+          const modLogChannelId = process.env.MOD_LOG_CHANNEL_ID;
+          if (modLogChannelId) {
+            const modLogChannel = await client.channels.fetch(modLogChannelId);
+            if (modLogChannel) {
+              await modLogChannel.send(`🚫 **"Mayhem" Filter** - Message from <@${message.author.id}> in <#${message.channel.id}>:\n\`${message.content}\``);
+            }
           }
-        }
 
-        await message.author.send("⚠️ Your message was removed because it contained restricted content: **mayhem**.");
-      } catch (err) {
-        console.error('❌ [messageCreate] Mayhem moderation error:', err);
+          await message.author.send("⚠️ Your message was removed because it contained restricted content: **mayhem**.");
+        } catch (err) {
+          console.error('❌ [messageCreate] Mayhem moderation error:', err);
+        }
+        return;
       }
-      return;
-    }
 
-    // 🔞 Adult site filter (mods exempt)
-    const isMod = message.member?.roles.cache.some(role =>
-      ['MODERATOR', 'ADMIN'].includes(role.name.toUpperCase())
-    );
+      const badPatterns = [
+        /pornhub/i,
+        /p[\W_]*o[\W_]*r[\W_]*n[\W_]*h[\W_]*u[\W_]*b/i,
+        /onlyfans/i,
+        /nude/i,
+        /xxx/i,
+        /sex/i,
+        /\.xxx/,
+        /discord\.gg\/[\w-]+/i,
+      ];
 
-    const badPatterns = [
-      /pornhub/i,
-      /p[\W_]*o[\W_]*r[\W_]*n[\W_]*h[\W_]*u[\W_]*b/i,
-      /onlyfans/i,
-      /nude/i,
-      /xxx/i,
-      /sex/i,
-      /\.xxx/,
-      /discord\.gg\/[\w-]+/i
-    ];
+      const isMod = message.member?.roles.cache.some(role =>
+        ['MODERATOR', 'ADMIN'].includes(role.name.toUpperCase())
+      );
 
-    if (!isMod && (badPatterns.some(pat => pat.test(content)) || adultSiteRegex.some(rx => rx.test(content)))) {
-      try {
-        await message.delete();
+      if (!isMod && (badPatterns.some(pat => pat.test(content)) || adultSiteRegex.some(rx => rx.test(content)))) {
+        try {
+          await message.delete();
 
-        const modLogChannelId = process.env.MOD_LOG_CHANNEL_ID;
-        if (modLogChannelId) {
-          const modLogChannel = await client.channels.fetch(modLogChannelId);
-          if (modLogChannel) {
-            await modLogChannel.send(`🚫 **Filtered Message** from <@${message.author.id}> in <#${message.channel.id}>:\n\`${message.content}\``);
+          const modLogChannelId = process.env.MOD_LOG_CHANNEL_ID;
+          if (modLogChannelId) {
+            const modLogChannel = await client.channels.fetch(modLogChannelId);
+            if (modLogChannel) {
+              await modLogChannel.send(`🚫 **Filtered Message** from <@${message.author.id}> in <#${message.channel.id}>:\n\`${message.content}\``);
+            }
           }
-        }
 
-        await message.author.send("⚠️ Yo, that kinda stuff isn’t allowed here. Chill out.");
-      } catch (err) {
-        console.error('❌ [messageCreate] Moderation error:', err);
+          await message.author.send("⚠️ Yo, that kinda stuff isn’t allowed here. Chill out.");
+        } catch (err) {
+          console.error('❌ [messageCreate] Moderation error:', err);
+        }
       }
     }
-
   } catch (outerError) {
     console.error('❌ [messageCreate] Unexpected error:', outerError);
   }
