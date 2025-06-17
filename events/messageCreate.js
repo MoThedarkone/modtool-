@@ -3,8 +3,6 @@ const fs = require('fs');
 const fetch = require('node-fetch');
 const path = './data/engageLogs.json';
 
-const basicKeywords = ['porn', 'xxx', 'sex', 'nude', 'onlyfans', 'nsfw', 'milf'];
-
 const adultSiteRegex = [
   /\b(?:porn|p[\W_]*o[\W_]*r[\W_]*n|pr0n)\b/i,
   /\b(?:xxx|x[\W_]*x[\W_]*x)\b/i,
@@ -30,15 +28,14 @@ function gamerBroReply(text) {
 }
 
 module.exports = async (message, client) => {
-  console.log('🔛 [messageCreate] Function triggered for message:', message.content);
+  console.log('🔛 [messageCreate] Triggered for:', message.content);
 
   try {
     if (message.author.bot) return;
-
     const content = message.content.toLowerCase();
 
     if (message.channel.isDMBased()) {
-      console.log('📩 DM received from:', message.author.tag);
+      console.log('📩 DM from:', message.author.tag);
 
       if (!process.env.OPENROUTER_API_KEY) {
         console.warn('⚠️ OPENROUTER_API_KEY is missing');
@@ -73,7 +70,7 @@ module.exports = async (message, client) => {
             'X-Title': 'SLAY-GBTV GamerBot'
           },
           body: JSON.stringify({
-            model: 'openchat/openchat-7b', // ✅ Changed from openai/gpt-3.5-turbo
+            model: 'mistralai/mistral-7b-instruct',
             messages: [
               {
                 role: 'system',
@@ -85,6 +82,8 @@ module.exports = async (message, client) => {
         });
 
         const data = await response.json();
+        console.log("🧠 OpenRouter response:", JSON.stringify(data, null, 2));
+
         const replyText = data.choices?.[0]?.message?.content;
 
         if (replyText) {
@@ -94,63 +93,54 @@ module.exports = async (message, client) => {
           return message.channel.send("Hey, I didn’t get your DM properly. Could you try again?");
         }
       } catch (error) {
-        console.error('❌ [DM] Error:', error);
+        console.error('❌ DM error:', error);
         return message.channel.send("Uh oh, I couldn't process your DM right now. Try again later!");
       }
-    } else {
-      if (mayhemRegex.test(content)) {
-        try {
-          await message.delete();
+    }
 
-          const modLogChannelId = process.env.MOD_LOG_CHANNEL_ID;
-          if (modLogChannelId) {
-            const modLogChannel = await client.channels.fetch(modLogChannelId);
-            if (modLogChannel) {
-              await modLogChannel.send(`🚫 **"Mayhem" Filter** - Message from <@${message.author.id}> in <#${message.channel.id}>:\n\`${message.content}\``);
-            }
-          }
-
-          await message.author.send("⚠️ Your message was removed because it contained restricted content: **mayhem**.");
-        } catch (err) {
-          console.error('❌ [messageCreate] Mayhem moderation error:', err);
+    // Server message filtering (not DM)
+    if (mayhemRegex.test(content)) {
+      try {
+        await message.delete();
+        const modLogChannel = await client.channels.fetch(process.env.MOD_LOG_CHANNEL_ID);
+        if (modLogChannel) {
+          await modLogChannel.send(`🚫 **"Mayhem" Filter** - Message from <@${message.author.id}> in <#${message.channel.id}>:\n\`${message.content}\``);
         }
-        return;
+        await message.author.send("⚠️ Your message was removed because it contained restricted content: **mayhem**.");
+      } catch (err) {
+        console.error('❌ Mayhem filter error:', err);
       }
+      return;
+    }
 
-      const badPatterns = [
-        /pornhub/i,
-        /p[\W_]*o[\W_]*r[\W_]*n[\W_]*h[\W_]*u[\W_]*b/i,
-        /onlyfans/i,
-        /nude/i,
-        /xxx/i,
-        /sex/i,
-        /\.xxx/,
-        /discord\.gg\/[\w-]+/i,
-      ];
+    const badPatterns = [
+      /pornhub/i,
+      /p[\W_]*o[\W_]*r[\W_]*n[\W_]*h[\W_]*u[\W_]*b/i,
+      /onlyfans/i,
+      /nude/i,
+      /xxx/i,
+      /sex/i,
+      /\.xxx/,
+      /discord\.gg\/[\w-]+/i,
+    ];
 
-      const isMod = message.member?.roles.cache.some(role =>
-        ['MODERATOR', 'ADMIN'].includes(role.name.toUpperCase())
-      );
+    const isMod = message.member?.roles.cache.some(role =>
+      ['MODERATOR', 'ADMIN'].includes(role.name.toUpperCase())
+    );
 
-      if (!isMod && (badPatterns.some(pat => pat.test(content)) || adultSiteRegex.some(rx => rx.test(content)))) {
-        try {
-          await message.delete();
-
-          const modLogChannelId = process.env.MOD_LOG_CHANNEL_ID;
-          if (modLogChannelId) {
-            const modLogChannel = await client.channels.fetch(modLogChannelId);
-            if (modLogChannel) {
-              await modLogChannel.send(`🚫 **Filtered Message** from <@${message.author.id}> in <#${message.channel.id}>:\n\`${message.content}\``);
-            }
-          }
-
-          await message.author.send("⚠️ Yo, that kinda stuff isn’t allowed here. Chill out.");
-        } catch (err) {
-          console.error('❌ [messageCreate] Moderation error:', err);
+    if (!isMod && (badPatterns.some(p => p.test(content)) || adultSiteRegex.some(rx => rx.test(content)))) {
+      try {
+        await message.delete();
+        const modLogChannel = await client.channels.fetch(process.env.MOD_LOG_CHANNEL_ID);
+        if (modLogChannel) {
+          await modLogChannel.send(`🚫 **Filtered Message** from <@${message.author.id}> in <#${message.channel.id}>:\n\`${message.content}\``);
         }
+        await message.author.send("⚠️ Yo, that kinda stuff isn’t allowed here. Chill out.");
+      } catch (err) {
+        console.error('❌ Moderation error:', err);
       }
     }
   } catch (outerError) {
-    console.error('❌ [messageCreate] Unexpected error:', outerError);
+    console.error('❌ messageCreate outer error:', outerError);
   }
 };
