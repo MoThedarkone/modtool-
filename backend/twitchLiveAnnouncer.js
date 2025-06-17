@@ -1,4 +1,5 @@
 //twitchLiveAnnouncer.js
+
 require('dotenv').config();
 const fs = require('fs');
 const fetch = require('node-fetch');
@@ -16,59 +17,47 @@ if (fs.existsSync(postCachePath)) {
   }
 }
 
-let accessToken = null;
+// 🔁 Refresh token logic (non-expiring)
+async function getRefreshedAccessToken() {
+  const params = new URLSearchParams({
+    client_id: process.env.TWITCH_CLIENT_ID,
+    client_secret: process.env.TWITCH_SECRET,
+    grant_type: 'refresh_token',
+    refresh_token: process.env.TWITCH_REFRESH_TOKEN,
+  });
 
-async function refreshAccessToken() {
-  console.log('🔁 Refreshing Twitch access token...');
-  const res = await fetch(`https://id.twitch.tv/oauth2/token`, {
+  const res = await fetch('https://id.twitch.tv/oauth2/token', {
     method: 'POST',
-    body: new URLSearchParams({
-      client_id: process.env.TWITCH_CLIENT_ID,
-      client_secret: process.env.TWITCH_SECRET,
-      grant_type: 'refresh_token',
-      refresh_token: process.env.TWITCH_REFRESH_TOKEN,
-    }),
+    body: params
   });
 
   const data = await res.json();
   if (!data.access_token) {
-    console.error('❌ [Twitch] Failed to refresh token:', data);
+    console.error('❌ Failed to refresh access token:', data);
     return null;
   }
-
-  accessToken = data.access_token;
-  console.log('✅ New Twitch access token acquired.');
-  return accessToken;
+  return data.access_token;
 }
 
-async function getLiveStreamers(usernames) {
-  if (!accessToken) await refreshAccessToken();
+async function getLiveStreamers(usernames, token) {
   if (!usernames.length) return [];
-
   const query = usernames.map(u => `user_login=${u}`).join('&');
   const res = await fetch(`https://api.twitch.tv/helix/streams?${query}`, {
     headers: {
       'Client-ID': process.env.TWITCH_CLIENT_ID,
-      'Authorization': `Bearer ${accessToken}`,
+      'Authorization': `Bearer ${token}`,
     },
   });
-
-  if (res.status === 401) {
-    console.warn('🔒 [Twitch] Token expired, refreshing...');
-    await refreshAccessToken();
-    return getLiveStreamers(usernames); // Retry once
-  }
-
   const data = await res.json();
   return data.data || [];
 }
 
 async function init(client) {
   const channelId = process.env.LIVE_ANNOUNCE_CHANNEL_ID || process.env.LIVE_CHANNEL_ID;
-  if (!channelId) return console.error('❌ LIVE_ANNOUNCE_CHANNEL_ID not set in .env');
+  if (!channelId) return console.error('❌ LIVE_ANNOUNCE_CHANNEL_ID not set.');
 
   const announceChannel = await client.channels.fetch(channelId).catch(() => null);
-  if (!announceChannel) return console.error('❌ Could not find live announcement channel.');
+  if (!announceChannel) return console.error('❌ Could not find announcement channel.');
 
   setInterval(async () => {
     let masterList = [];
@@ -79,29 +68,30 @@ async function init(client) {
     }
 
     const usernames = masterList.map(s => s.username.toLowerCase());
-    const liveNow = await getLiveStreamers(usernames);
+    const token = await getRefreshedAccessToken();
+    if (!token) return;
+
+    const liveNow = await getLiveStreamers(usernames, token);
 
     const currentlyLive = {};
     for (const s of liveNow) {
       currentlyLive[s.user_login.toLowerCase()] = s;
     }
 
-    // 🟣 Announce new streamers
+    // Announce new live streamers
     for (const s of liveNow) {
       const uname = s.user_login.toLowerCase();
       if (!cache[uname]) {
         const embed = new EmbedBuilder()
-          .setAuthor({
-            name: `${s.user_name} is now live on Twitch!`,
-            iconURL: 'https://cdn.discordapp.com/attachments/1295047768103977004/1384323653155553360/Untitled_design.png',
-          })
-          .setTitle(s.title || 'Untitled Stream')
-          .setURL(`https://twitch.tv/${s.user_login}`)
-          .setDescription(`🎮 **Game:** ${s.game_name || 'Unknown'}\n👥 **Viewers:** ${s.viewer_count}`)
-          .setImage(`https://static-cdn.jtvnw.net/previews-ttv/live_user_${s.user_login}-640x360.jpg`)
           .setColor(0x9146FF)
-          .setFooter({ text: 'SLAY GBTV' })
-          .setTimestamp();
+          .setTitle(`${s.user_name} is now LIVE!`)
+          .setDescription(`🎮 **${s.game_name || 'Unknown'}**\n👥 **${s.viewer_count} viewers**\n\n[Watch now](https://twitch.tv/${s.user_login})`)
+          .setThumbnail(`https://static-cdn.jtvnw.net/previews-ttv/live_user_${s.user_login}-440x248.jpg`)
+          .setTimestamp()
+          .setAuthor({
+            name: "Twitch Stream Alert",
+            iconURL: "https://cdn.discordapp.com/attachments/1295047768103977004/1384323653155553360/Untitled_design.png"
+          });
 
         const msg = await announceChannel.send({ embeds: [embed] });
         cache[uname] = { messageId: msg.id, postedAt: Date.now() };
@@ -109,18 +99,18 @@ async function init(client) {
       }
     }
 
-    // 🧹 Remove offline streamers
+    // Delete offline streamers
     for (const uname in cache) {
       if (!currentlyLive[uname]) {
         try {
           const msg = await announceChannel.messages.fetch(cache[uname].messageId);
           await msg.delete();
-        } catch {}
+        } catch (e) {}
         delete cache[uname];
         fs.writeFileSync(postCachePath, JSON.stringify(cache, null, 2));
       }
     }
-  }, 30 * 1000); // Check every 30 seconds
+  }, 30 * 1000); // Every 30 seconds
 }
 
 module.exports = { init };
