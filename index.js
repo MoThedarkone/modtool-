@@ -1,4 +1,4 @@
-// === ✅ START OF MERGED INDEX FILE ===
+// === ✅ START OF FINAL INDEX FILE ===
 require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
@@ -26,11 +26,10 @@ require('./backend/twitchClipListener');
 const app = express();
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server });
-const PORT = process.env.PORT || 8080; // ✅ Use 8080 for Northflank
+const PORT = process.env.PORT || 3002;
 let dashboardClients = [];
 
-app.use(express.static(path.join(__dirname, '.')));
-
+// ✅ Serve Twitch callback BEFORE static middleware
 app.get('/callback', async (req, res) => {
   const code = req.query.code;
   if (!code) return res.status(400).send("Missing 'code' parameter.");
@@ -61,9 +60,13 @@ app.get('/callback', async (req, res) => {
   }
 });
 
+// ✅ Serve dashboard at root
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'dashboard.html'));
 });
+
+// ✅ Serve static assets if needed
+app.use('/assets', express.static(path.join(__dirname, 'public')));
 
 wss.on('connection', (ws) => {
   dashboardClients.push(ws);
@@ -91,7 +94,6 @@ const client = new Client({
   partials: [Partials.Channel],
 });
 
-console.log('🔑 BOT_TOKEN:', process.env.BOT_TOKEN ? '[LOADED]' : '[MISSING]');
 console.log('📍 Twitch Redirect URI:', process.env.TWITCH_REDIRECT_URI);
 
 client.on('huggingfaceApiCall', (username, messageContent) => {
@@ -104,11 +106,13 @@ client.once('ready', () => {
   setInterval(() => announceLiveStreamers(client), 2 * 60 * 1000);
   updateStats(client);
   setInterval(() => updateStats(client), 10 * 60 * 1000);
+
   const sharedChannelId = process.env.STEAM_GAMES_CHANNEL_ID;
   if (sharedChannelId) {
     fetchAllFreeGames(client, sharedChannelId);
     setInterval(() => fetchAllFreeGames(client, sharedChannelId), 30 * 60 * 1000);
   }
+
   if (interactionHandler.autoRoleHandler) {
     interactionHandler.autoRoleHandler(client);
   }
@@ -164,9 +168,7 @@ client.on('guildMemberAdd', require('./events/guildMemberAdd'));
 client.on('guildMemberRemove', require('./events/guildMemberRemove'));
 client.on('guildBanAdd', require('./events/guildBanAdd'));
 
-client.login(process.env.BOT_TOKEN).catch(err => {
-  console.error('❌ Discord login failed:', err);
-});
+client.login(process.env.BOT_TOKEN);
 
 // === 🚀 LAUNCH DASHBOARD SERVER ===
 server.listen(PORT, () => {
@@ -184,4 +186,4 @@ process.on('unhandledRejection', (reason, promise) => {
 process.on('uncaughtException', (err) => {
   console.error('❌ Uncaught Exception:', err);
 });
-// === ✅ END OF FILE ===
+// === ✅ END OF FINAL INDEX FILE ===
