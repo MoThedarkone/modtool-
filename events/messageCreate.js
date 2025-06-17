@@ -19,20 +19,10 @@ const mayhemRegex = /\b(?:mayhem|m[a@]yhem|ma[yj]hem|m[\W_]*a[\W_]*y[\W_]*h[\W_]
 
 function gamerBroReply(text) {
   const starters = [
-    "Yo dude,",
-    "Ayy fam,",
-    "Sup bro,",
-    "Hey champ,",
-    "What’s good,",
-    "Yo my guy,"
+    "Yo dude,", "Ayy fam,", "Sup bro,", "Hey champ,", "What’s good,", "Yo my guy,"
   ];
   const enders = [
-    "🔥🎮",
-    "GG,",
-    "No cap,",
-    "Let's get that W!",
-    "Stay epic,",
-    "Catch you on the flip!"
+    "🔥🎮", "GG,", "No cap,", "Let's get that W!", "Stay epic,", "Catch you on the flip!"
   ];
   const start = starters[Math.floor(Math.random() * starters.length)];
   const end = enders[Math.floor(Math.random() * enders.length)];
@@ -47,7 +37,8 @@ module.exports = async (message, client) => {
 
     const content = message.content.toLowerCase();
 
-    if (message.channel.type === 1 || message.channel.isDMBased?.()) {
+    // === HANDLE DIRECT MESSAGES ===
+    if (message.channel.isDMBased()) {
       console.log('📩 DM received from:', message.author.tag);
 
       if (!process.env.OPENROUTER_API_KEY) {
@@ -104,8 +95,10 @@ module.exports = async (message, client) => {
         console.error('❌ [DM] Error:', error);
         return message.channel.send("Uh oh, I couldn't process your DM right now. Try again later!");
       }
+    }
 
-    } else {
+    // === HANDLE GUILD MESSAGES ===
+    else {
       if (mayhemRegex.test(content)) {
         try {
           await message.delete();
@@ -140,7 +133,7 @@ module.exports = async (message, client) => {
         ['MODERATOR', 'ADMIN'].includes(role.name.toUpperCase())
       );
 
-      if (!isMod && (badPatterns.some(pat => pat.test(content)) || adultSiteRegex.some(rx => rx.test(content)))) {
+      if (!isMod && badPatterns.some(pat => pat.test(content) || adultSiteRegex.some(rx => rx.test(content)))) {
         try {
           await message.delete();
 
