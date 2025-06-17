@@ -75,7 +75,10 @@ module.exports = async (message, client) => {
           body: JSON.stringify({
             model: 'openai/gpt-3.5-turbo',
             messages: [
-              { role: 'system', content: 'You are a chill gamer bro Discord bot who speaks casually, jokes around, and uses emojis. Keep replies short and funny unless the user asks for something deep.' },
+              {
+                role: 'system',
+                content: 'You are a chill gamer bro Discord bot who speaks casually, jokes around, and uses emojis. Keep replies short and funny unless the user asks for something deep.'
+              },
               { role: 'user', content: message.content }
             ]
           })
@@ -94,7 +97,6 @@ module.exports = async (message, client) => {
         console.error('❌ [DM] Error:', error);
         return message.channel.send("Uh oh, I couldn't process your DM right now. Try again later!");
       }
-
     } else {
       if (mayhemRegex.test(content)) {
         try {
@@ -130,7 +132,7 @@ module.exports = async (message, client) => {
         ['MODERATOR', 'ADMIN'].includes(role.name.toUpperCase())
       );
 
-      if (!isMod && badPatterns.some(pat => pat.test(content) || adultSiteRegex.some(rx => rx.test(content)))) {
+      if (!isMod && (badPatterns.some(pat => pat.test(content)) || adultSiteRegex.some(rx => rx.test(content)))) {
         try {
           await message.delete();
 
@@ -148,7 +150,6 @@ module.exports = async (message, client) => {
         }
       }
     }
-
   } catch (outerError) {
     console.error('❌ [messageCreate] Unexpected error:', outerError);
   }
