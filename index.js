@@ -1,4 +1,4 @@
-// === ✅ START OF FINAL INDEX FILE ===
+// === ✅ START OF MERGED INDEX FILE ===
 require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
@@ -29,7 +29,6 @@ const wss = new WebSocketServer({ server });
 const PORT = process.env.PORT || 3002;
 let dashboardClients = [];
 
-// ✅ Serve Twitch callback BEFORE static middleware
 app.get('/callback', async (req, res) => {
   const code = req.query.code;
   if (!code) return res.status(400).send("Missing 'code' parameter.");
@@ -65,7 +64,7 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'dashboard.html'));
 });
 
-// ✅ Serve static assets if needed
+// ✅ Optional: serve static assets if needed
 app.use('/assets', express.static(path.join(__dirname, 'public')));
 
 wss.on('connection', (ws) => {
@@ -106,13 +105,11 @@ client.once('ready', () => {
   setInterval(() => announceLiveStreamers(client), 2 * 60 * 1000);
   updateStats(client);
   setInterval(() => updateStats(client), 10 * 60 * 1000);
-
   const sharedChannelId = process.env.STEAM_GAMES_CHANNEL_ID;
   if (sharedChannelId) {
     fetchAllFreeGames(client, sharedChannelId);
     setInterval(() => fetchAllFreeGames(client, sharedChannelId), 30 * 60 * 1000);
   }
-
   if (interactionHandler.autoRoleHandler) {
     interactionHandler.autoRoleHandler(client);
   }
@@ -171,12 +168,21 @@ client.on('guildBanAdd', require('./events/guildBanAdd'));
 client.login(process.env.BOT_TOKEN);
 
 // === 🚀 LAUNCH DASHBOARD SERVER ===
-server.listen(PORT, () => {
-  console.log(`🖥️ Dashboard + Callback server running on port ${PORT}`);
-  if (process.env.NF_PUBLIC_URL) {
-    console.log(`🌍 Access it here: ${process.env.NF_PUBLIC_URL}`);
-  }
-});
+server.listen(PORT)
+  .once('listening', () => {
+    console.log(`🖥️ Dashboard + Callback server running on port ${PORT}`);
+    if (process.env.NF_PUBLIC_URL) {
+      console.log(`🌍 Access it here: ${process.env.NF_PUBLIC_URL}`);
+    }
+  })
+  .on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      console.error(`❌ Port ${PORT} is already in use. Callback/dashboard server was not started.`);
+      console.error(`🛑 Check if another instance is already running, or if something is blocking port ${PORT}.`);
+    } else {
+      console.error('❌ Unexpected error when starting dashboard server:', err);
+    }
+  });
 
 // === GLOBAL ERROR HANDLING ===
 process.on('unhandledRejection', (reason, promise) => {
@@ -186,4 +192,5 @@ process.on('unhandledRejection', (reason, promise) => {
 process.on('uncaughtException', (err) => {
   console.error('❌ Uncaught Exception:', err);
 });
-// === ✅ END OF FINAL INDEX FILE ===
+// === ✅ END OF FILE ===
+
