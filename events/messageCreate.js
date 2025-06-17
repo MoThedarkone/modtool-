@@ -37,7 +37,6 @@ module.exports = async (message, client) => {
 
     const content = message.content.toLowerCase();
 
-    // === HANDLE DIRECT MESSAGES ===
     if (message.channel.isDMBased()) {
       console.log('📩 DM received from:', message.author.tag);
 
@@ -95,10 +94,8 @@ module.exports = async (message, client) => {
         console.error('❌ [DM] Error:', error);
         return message.channel.send("Uh oh, I couldn't process your DM right now. Try again later!");
       }
-    }
 
-    // === HANDLE GUILD MESSAGES ===
-    else {
+    } else {
       if (mayhemRegex.test(content)) {
         try {
           await message.delete();
@@ -151,6 +148,7 @@ module.exports = async (message, client) => {
         }
       }
     }
+
   } catch (outerError) {
     console.error('❌ [messageCreate] Unexpected error:', outerError);
   }
