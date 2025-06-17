@@ -1,4 +1,4 @@
-// === ✅ START OF MERGED INDEX FILE ===
+// === ✅ START OF FINAL INDEX FILE ===
 require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
@@ -26,9 +26,10 @@ require('./backend/twitchClipListener');
 const app = express();
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server });
-const PORT = process.env.PORT || 3002;
+const PORT = process.env.PORT || 8080;
 let dashboardClients = [];
 
+// ✅ Twitch OAuth Callback
 app.get('/callback', async (req, res) => {
   const code = req.query.code;
   if (!code) return res.status(400).send("Missing 'code' parameter.");
@@ -59,13 +60,13 @@ app.get('/callback', async (req, res) => {
   }
 });
 
-// ✅ Serve dashboard at root
+// ✅ Serve dashboard HTML
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'dashboard.html'));
 });
 
-// ✅ Optional: serve static assets if needed
-app.use('/assets', express.static(path.join(__dirname, 'public')));
+// ✅ Static assets fallback (MUST be last!)
+app.use(express.static(path.join(__dirname, '.')));
 
 wss.on('connection', (ws) => {
   dashboardClients.push(ws);
@@ -147,7 +148,9 @@ client.on('messageCreate', async (message) => {
   }
 
   const badPatterns = [/pornhub/i, /onlyfans/i, /nude/i, /xxx/i, /sex/i, /\.xxx/, /discord\.gg\/[\w-]+/i];
-  const isMod = message.member?.roles.cache.some(role => ['MODERATOR', 'ADMIN'].includes(role.name.toUpperCase()));
+  const isMod = message.member?.roles.cache.some(role =>
+    ['MODERATOR', 'ADMIN'].includes(role.name.toUpperCase())
+  );
 
   if (!isMod && badPatterns.some(pat => pat.test(content))) {
     try {
@@ -178,9 +181,8 @@ server.listen(PORT)
   .on('error', (err) => {
     if (err.code === 'EADDRINUSE') {
       console.error(`❌ Port ${PORT} is already in use. Callback/dashboard server was not started.`);
-      console.error(`🛑 Check if another instance is already running, or if something is blocking port ${PORT}.`);
     } else {
-      console.error('❌ Unexpected error when starting dashboard server:', err);
+      console.error('❌ Unexpected server error:', err);
     }
   });
 
@@ -193,4 +195,3 @@ process.on('uncaughtException', (err) => {
   console.error('❌ Uncaught Exception:', err);
 });
 // === ✅ END OF FILE ===
-
