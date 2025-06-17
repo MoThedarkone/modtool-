@@ -84,13 +84,14 @@ module.exports = async (message, client) => {
         const data = await response.json();
         console.log("🧠 OpenRouter response:", JSON.stringify(data, null, 2));
 
-        const replyText = data.choices?.[0]?.message?.content;
+        const replyText = data?.choices?.[0]?.message?.content?.trim();
 
-        if (replyText) {
+        if (replyText && replyText.length > 0) {
           const reply = gamerBroReply(replyText);
           return message.channel.send(reply);
         } else {
-          return message.channel.send("Hey, I didn’t get your DM properly. Could you try again?");
+          console.warn('⚠️ OpenRouter returned an empty or invalid reply.');
+          return message.channel.send("😅 Yo, my brain just lagged hard. Mind hitting me with that again?");
         }
       } catch (error) {
         console.error('❌ DM error:', error);
