@@ -1,40 +1,52 @@
 // backend/twitchTokenManager.js
 require('dotenv').config();
+const fs = require('fs');
 const fetch = require('node-fetch');
+const path = require('path');
 
-let cachedToken = null;
-let tokenExpiry = 0;
+const cachePath = path.join(__dirname, 'twitchTokenCache.json');
 
 async function getTwitchAccessToken() {
-  const now = Date.now();
+  let tokenData = null;
 
-  if (cachedToken && now < tokenExpiry - 60000) {
-    return cachedToken;
+  // Try reading cache
+  if (fs.existsSync(cachePath)) {
+    try {
+      tokenData = JSON.parse(fs.readFileSync(cachePath));
+    } catch (err) {
+      console.error('⚠️ Error reading Twitch token cache:', err);
+    }
   }
 
-  const params = new URLSearchParams();
-  params.append('client_id', process.env.TWITCH_CLIENT_ID);
-  params.append('client_secret', process.env.TWITCH_SECRET);
-  params.append('grant_type', 'refresh_token');
-  params.append('refresh_token', process.env.TWITCH_REFRESH_TOKEN);
-
-  const res = await fetch('https://id.twitch.tv/oauth2/token', {
-    method: 'POST',
-    body: params
-  });
-
-  const data = await res.json();
-
-  if (!res.ok || !data.access_token) {
-    console.error('❌ Failed to refresh Twitch token:', data);
-    throw new Error('Failed to refresh Twitch token');
+  // If token exists and hasn't expired
+  const now = Math.floor(Date.now() / 1000);
+  if (tokenData?.access_token && tokenData.expires_at > now + 60) {
+    return tokenData.access_token;
   }
 
-  cachedToken = data.access_token;
-  tokenExpiry = now + data.expires_in * 1000;
+  // Fetch new token
+  try {
+    const resp = await fetch(`https://id.twitch.tv/oauth2/token?grant_type=refresh_token&refresh_token=${process.env.TWITCH_REFRESH_TOKEN}&client_id=${process.env.TWITCH_CLIENT_ID}&client_secret=${process.env.TWITCH_SECRET}`, {
+      method: 'POST'
+    });
 
-  console.log('🔄 New Twitch token obtained.');
-  return cachedToken;
+    const json = await resp.json();
+
+    if (!json.access_token) {
+      throw new Error(JSON.stringify(json));
+    }
+
+    // Save to cache
+    const newTokenData = {
+      access_token: json.access_token,
+      expires_at: now + json.expires_in
+    };
+    fs.writeFileSync(cachePath, JSON.stringify(newTokenData, null, 2));
+    return newTokenData.access_token;
+  } catch (err) {
+    console.error('❌ Failed to refresh Twitch token:', err);
+    throw err;
+  }
 }
 
 module.exports = { getTwitchAccessToken };
