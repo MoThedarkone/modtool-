@@ -1,3 +1,4 @@
+// === ✅ CLEANED messageCreate.js (HuggingFace removed, OpenRouter kept) ===
 require('dotenv').config();
 const fs = require('fs');
 const fetch = require('node-fetch');
@@ -34,6 +35,7 @@ module.exports = async (message, client) => {
     if (message.author.bot) return;
     const content = message.content.toLowerCase();
 
+    // === DM Handler w/ OpenRouter ===
     if (message.channel.isDMBased()) {
       console.log('📩 DM from:', message.author.tag);
 
@@ -83,7 +85,6 @@ module.exports = async (message, client) => {
         console.log("🧠 OpenRouter response:", JSON.stringify(data, null, 2));
 
         const replyText = data?.choices?.[0]?.message?.content?.trim();
-
         if (replyText && replyText.length > 0) {
           const reply = gamerBroReply(replyText);
           return message.channel.send(reply);
@@ -97,7 +98,7 @@ module.exports = async (message, client) => {
       }
     }
 
-    // Server message filtering
+    // === Moderation Filters ===
     if (mayhemRegex.test(content)) {
       try {
         await message.delete();
