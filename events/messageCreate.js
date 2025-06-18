@@ -43,8 +43,6 @@ module.exports = async (message, client) => {
       }
 
       try {
-        client.emit('huggingfaceApiCall', message.author.tag, message.content);
-
         const logs = fs.existsSync(path) ? JSON.parse(fs.readFileSync(path)) : {};
         logs[message.author.id] = {
           responded: true,
@@ -99,7 +97,7 @@ module.exports = async (message, client) => {
       }
     }
 
-    // Server message filtering (not DM)
+    // Server message filtering
     if (mayhemRegex.test(content)) {
       try {
         await message.delete();
