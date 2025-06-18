@@ -4,7 +4,7 @@ const tmi = require('tmi.js');
 const fetch = require('node-fetch');
 const fs = require('fs');
 const path = require('path');
-const { getValidAccessToken } = require('./utils/twitchAuthHelper'); // ✅ Auto refresh logic
+const { getValidAccessToken } = require('./twitchAuthHelper'); // ✅ Auto refresh logic
 
 // === File Paths ===
 const twitchConfigPath = path.join(__dirname, 'data', 'twitchChannels.json');
