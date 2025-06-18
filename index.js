@@ -68,6 +68,11 @@ app.get('/dashboard', (req, res) => {
   res.sendFile(path.join(__dirname, 'dashboard', 'dashboard.html'));
 });
 
+// ✅ Redirect "/" to "/dashboard"
+app.get('/', (req, res) => {
+  res.redirect('/dashboard');
+});
+
 wss.on('connection', (ws) => {
   dashboardClients.push(ws);
   ws.on('close', () => {
