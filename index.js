@@ -60,13 +60,13 @@ app.get('/callback', async (req, res) => {
   }
 });
 
-// ✅ Serve dashboard HTML
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'dashboard.html'));
-});
+// ✅ Serve static dashboard files
+app.use('/dashboard', express.static(path.join(__dirname, 'dashboard')));
 
-// ✅ Static assets fallback (MUST be last!)
-app.use(express.static(path.join(__dirname, '.')));
+// ✅ Serve dashboard.html when user visits /dashboard
+app.get('/dashboard', (req, res) => {
+  res.sendFile(path.join(__dirname, 'dashboard', 'dashboard.html'));
+});
 
 wss.on('connection', (ws) => {
   dashboardClients.push(ws);
@@ -103,7 +103,7 @@ client.once('ready', () => {
   setInterval(() => sendLiveGrid(client), 5 * 60 * 1000);
 
   // ✅ Start Twitch live announcement embed system
-  twitchAnnouncer.init(client); // 🟢 now actively runs the announcer
+  twitchAnnouncer.init(client);
 
   // ✅ Start status tracking
   updateStats(client);
@@ -181,7 +181,7 @@ server.listen(PORT)
   .once('listening', () => {
     console.log(`🖥️ Dashboard + Callback server running on port ${PORT}`);
     if (process.env.NF_PUBLIC_URL) {
-      console.log(`🌍 Access it here: ${process.env.NF_PUBLIC_URL}`);
+      console.log(`🌍 Access it here: ${process.env.NF_PUBLIC_URL}/dashboard`);
     }
   })
   .on('error', (err) => {
