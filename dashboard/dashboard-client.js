@@ -1,5 +1,7 @@
-/ dashboard/dashboard-client.js
-const ws = new WebSocket(`ws://${window.location.hostname}:3002`);
+// dashboard/dashboard-client.js
+const protocol = location.protocol === 'https:' ? 'wss' : 'ws';
+const ws = new WebSocket(`${protocol}://${window.location.hostname}:3002`);
+
 const chatbox = document.getElementById('chatbox');
 const tabs = document.querySelectorAll('.tab');
 let currentPlatform = 'discord';
