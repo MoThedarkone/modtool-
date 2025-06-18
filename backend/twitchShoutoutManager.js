@@ -1,10 +1,9 @@
-// twitchShoutoutManager.js
 require('dotenv').config();
 const tmi = require('tmi.js');
 const fetch = require('node-fetch');
 const fs = require('fs');
 const path = require('path');
-const { getValidAccessToken } = require('./twitchAuthHelper'); // ✅ Auto refresh logic
+const { getTwitchAccessToken } = require('./twitchTokenManager'); // ✅ Uses new dynamic token
 
 // === File Paths ===
 const twitchConfigPath = path.join(__dirname, 'data', 'twitchChannels.json');
@@ -25,7 +24,7 @@ const enabledChannels = Object.entries(twitchConfig)
 const client = new tmi.Client({
   identity: {
     username: process.env.TWITCH_BOT_USERNAME,
-    password: process.env.TWITCH_OAUTH_TOKEN // Required for IRC
+    password: process.env.TWITCH_OAUTH_TOKEN // Still required for IRC
   },
   channels: enabledChannels
 });
@@ -51,7 +50,7 @@ function reloadChannels() {
 // === Send Twitch API Shoutout (popup) ===
 async function sendTwitchShoutoutAPI(targetUsername) {
   try {
-    const accessToken = await getValidAccessToken(); // ✅ Dynamic token from refresh logic
+    const accessToken = await getTwitchAccessToken(); // ✅ Pull fresh token from token manager
 
     const idRes = await fetch(`https://api.twitch.tv/helix/users?login=${targetUsername}`, {
       headers: {
