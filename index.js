@@ -96,10 +96,6 @@ const client = new Client({
 
 console.log('📍 Twitch Redirect URI:', process.env.TWITCH_REDIRECT_URI);
 
-client.on('huggingfaceApiCall', (username, messageContent) => {
-  console.log(`🤖 [DEBUG] Bot calling Huggingface API for user ${username}: "${messageContent}"`);
-});
-
 client.once('ready', () => {
   console.log(`🎮 ${client.user.tag} is online`);
 
