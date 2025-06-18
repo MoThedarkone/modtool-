@@ -1,12 +1,12 @@
+// backend/twitchClipListener.js
 require('dotenv').config();
 const tmi = require('tmi.js');
 const fetch = require('node-fetch');
 const fs = require('fs');
-const { getTwitchAccessToken } = require('./twitchTokenManager'); // ✅ CORRECT PATH
+const { getTwitchAccessToken } = require('./twitchTokenManager'); // 👈 CORRECT
 
 const twitchChannelsPath = './data/twitchChannels.json';
 
-// Load enabled channels from config
 let twitchChannels = [];
 if (fs.existsSync(twitchChannelsPath)) {
   try {
@@ -22,7 +22,7 @@ if (fs.existsSync(twitchChannelsPath)) {
 const client = new tmi.Client({
   identity: {
     username: process.env.TWITCH_BOT_USERNAME,
-    password: process.env.TWITCH_OAUTH_TOKEN // still needed for IRC presence
+    password: process.env.TWITCH_OAUTH_TOKEN // still needed for IRC
   },
   channels: twitchChannels
 });
@@ -39,18 +39,18 @@ client.on('chat', async (channel, userstate, message, self) => {
     client.say(channel, '📎 Creating a Twitch clip…');
 
     try {
-      const token = await getTwitchAccessToken(); // 🔁 Dynamic token system
+      const token = await getTwitchAccessToken();
       const broadcaster = channel.replace('#', '');
 
-      const resp = await fetch(`https://api.twitch.tv/helix/users?login=${broadcaster}`, {
+      const userResp = await fetch(`https://api.twitch.tv/helix/users?login=${broadcaster}`, {
         headers: {
           'Client-ID': process.env.TWITCH_CLIENT_ID,
           'Authorization': `Bearer ${token}`
         }
       });
 
-      const json = await resp.json();
-      const broadcasterId = json.data?.[0]?.id;
+      const userJson = await userResp.json();
+      const broadcasterId = userJson.data?.[0]?.id;
 
       if (!broadcasterId) {
         client.say(channel, "❌ Couldn't find broadcaster ID—clip failed.");
@@ -75,8 +75,8 @@ client.on('chat', async (channel, userstate, message, self) => {
 
       const clipId = clipJson.data[0].id;
       client.say(channel, `🎉 Clip created! https://clips.twitch.tv/${clipId}`);
-    } catch (e) {
-      console.error('❌ Clip creation error:', e);
+    } catch (err) {
+      console.error('❌ Clip creation error:', err);
       client.say(channel, '⚠️ Error creating clip.');
     }
   }
