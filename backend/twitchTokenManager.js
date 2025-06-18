@@ -1,10 +1,11 @@
+// === 📦 backend/twitchTokenManager.js ===
 require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
 const fetch = require('node-fetch');
 
-// === Location to store the active tokens ===
-const tokenCachePath = path.join(__dirname, 'data', 'twitchTokenCache.json');
+// === Path to cached token JSON file ===
+const tokenCachePath = path.join(__dirname, '../data/twitchTokenCache.json');
 
 // === Load token cache from file ===
 function loadTokenCache() {
@@ -33,7 +34,7 @@ async function refreshTwitchTokenIfNeeded() {
   const now = Date.now();
 
   if (now < cache.expires_at - 60 * 1000) {
-    return; // ✅ Token still valid
+    return; // ✅ Still valid
   }
 
   console.log('🔄 Refreshing Twitch token...');
@@ -65,24 +66,31 @@ async function refreshTwitchTokenIfNeeded() {
 
     saveTokenCache(updated);
 
-    // Update current process.env in memory (optional but helpful for IRC)
+    // Optional: Update in-memory values (for IRC)
     process.env.TWITCH_OAUTH_TOKEN = updated.access_token;
     process.env.TWITCH_REFRESH_TOKEN = updated.refresh_token;
 
     console.log('✅ Twitch token refreshed and saved!');
   } catch (err) {
-    console.error('❌ Error refreshing token:', err);
+    console.error('❌ Error refreshing Twitch token:', err);
   }
 }
 
-// === Get the current token (always valid) ===
+// === Get valid token for API ===
 async function getTwitchAccessToken() {
   await refreshTwitchTokenIfNeeded();
   const cache = loadTokenCache();
   return cache.access_token;
 }
 
+// === Get token for IRC login (tmi.js) ===
+async function getTmiOauthToken() {
+  const token = await getTwitchAccessToken();
+  return `oauth:${token}`;
+}
+
 module.exports = {
   getTwitchAccessToken,
+  getTmiOauthToken,
   refreshTwitchTokenIfNeeded
 };
