@@ -1,9 +1,8 @@
-// twitchClipListener.js
 require('dotenv').config();
 const tmi = require('tmi.js');
 const fetch = require('node-fetch');
 const fs = require('fs');
-const { getTwitchAccessToken } = require('./utils/twitchTokenManager'); // ✅ NEW
+const { getTwitchAccessToken } = require('./twitchTokenManager'); // ✅ CORRECT PATH
 
 const twitchChannelsPath = './data/twitchChannels.json';
 
@@ -23,7 +22,7 @@ if (fs.existsSync(twitchChannelsPath)) {
 const client = new tmi.Client({
   identity: {
     username: process.env.TWITCH_BOT_USERNAME,
-    password: process.env.TWITCH_OAUTH_TOKEN // still needed for IRC
+    password: process.env.TWITCH_OAUTH_TOKEN // still needed for IRC presence
   },
   channels: twitchChannels
 });
@@ -40,7 +39,7 @@ client.on('chat', async (channel, userstate, message, self) => {
     client.say(channel, '📎 Creating a Twitch clip…');
 
     try {
-      const token = await getTwitchAccessToken(); // 🔁 Dynamic token
+      const token = await getTwitchAccessToken(); // 🔁 Dynamic token system
       const broadcaster = channel.replace('#', '');
 
       const resp = await fetch(`https://api.twitch.tv/helix/users?login=${broadcaster}`, {
@@ -77,7 +76,7 @@ client.on('chat', async (channel, userstate, message, self) => {
       const clipId = clipJson.data[0].id;
       client.say(channel, `🎉 Clip created! https://clips.twitch.tv/${clipId}`);
     } catch (e) {
-      console.error('Clip creation error:', e);
+      console.error('❌ Clip creation error:', e);
       client.say(channel, '⚠️ Error creating clip.');
     }
   }
