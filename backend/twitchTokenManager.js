@@ -1,13 +1,11 @@
-// === 📦 backend/twitchTokenManager.js ===
 require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
 const fetch = require('node-fetch');
 
-// === Path to cached token JSON file ===
 const tokenCachePath = path.join(__dirname, '../data/twitchTokenCache.json');
 
-// === Load token cache from file ===
+// === Load token cache ===
 function loadTokenCache() {
   if (fs.existsSync(tokenCachePath)) {
     try {
@@ -16,6 +14,7 @@ function loadTokenCache() {
       console.error('⚠️ Failed to parse token cache:', err);
     }
   }
+
   return {
     access_token: process.env.TWITCH_OAUTH_TOKEN || '',
     refresh_token: process.env.TWITCH_REFRESH_TOKEN || '',
@@ -23,21 +22,29 @@ function loadTokenCache() {
   };
 }
 
-// === Save token cache to file ===
+// === Save token cache ===
 function saveTokenCache(data) {
-  fs.writeFileSync(tokenCachePath, JSON.stringify(data, null, 2));
+  try {
+    fs.writeFileSync(tokenCachePath, JSON.stringify(data, null, 2));
+  } catch (err) {
+    console.error('❌ Failed to save token cache:', err);
+  }
 }
 
-// === Refresh access token if expired ===
+// === Refresh token if expired or near expiry ===
 async function refreshTwitchTokenIfNeeded() {
   const cache = loadTokenCache();
   const now = Date.now();
 
-  if (now < cache.expires_at - 60 * 1000) {
-    return; // ✅ Still valid
+  // Only refresh if less than 2.5h left
+  const bufferTime = 1000 * 60 * 10; // 10 minutes buffer
+  const refreshThreshold = 1000 * 60 * 60 * 2.5; // 2.5 hours
+
+  if (cache.access_token && now < cache.expires_at - bufferTime) {
+    return; // ✅ Still good
   }
 
-  console.log('🔄 Refreshing Twitch token...');
+  console.log('🔄 [TwitchTokenManager] Refreshing Twitch token...');
 
   try {
     const res = await fetch('https://id.twitch.tv/oauth2/token', {
@@ -61,29 +68,29 @@ async function refreshTwitchTokenIfNeeded() {
     const updated = {
       access_token: data.access_token,
       refresh_token: data.refresh_token,
-      expires_at: Date.now() + (data.expires_in * 1000)
+      expires_at: now + (data.expires_in * 1000)
     };
 
     saveTokenCache(updated);
 
-    // Optional: Update in-memory values (for IRC)
+    // Optional override for IRC (tmi.js)
     process.env.TWITCH_OAUTH_TOKEN = updated.access_token;
     process.env.TWITCH_REFRESH_TOKEN = updated.refresh_token;
 
-    console.log('✅ Twitch token refreshed and saved!');
+    console.log('✅ [TwitchTokenManager] Token refreshed and saved');
   } catch (err) {
-    console.error('❌ Error refreshing Twitch token:', err);
+    console.error('❌ [TwitchTokenManager] Error refreshing token:', err);
   }
 }
 
-// === Get valid token for API ===
+// === Get current access token (refreshed if needed) ===
 async function getTwitchAccessToken() {
   await refreshTwitchTokenIfNeeded();
   const cache = loadTokenCache();
   return cache.access_token;
 }
 
-// === Get token for IRC login (tmi.js) ===
+// === For IRC: return token in oauth: format ===
 async function getTmiOauthToken() {
   const token = await getTwitchAccessToken();
   return `oauth:${token}`;
