@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const express = require('express');
 const http = require('http');
+const session = require('express-session');
 const { WebSocketServer } = require('ws');
 const fetch = require('node-fetch');
 const { Client, GatewayIntentBits, Partials } = require('discord.js');
@@ -19,15 +20,60 @@ const { relayChatMessage } = require('./dashboard/dashboard');
 
 // 🟩 Twitch integrations
 require('./backend/twitchShoutoutManager');
-const twitchAnnouncer = require('./backend/twitchLiveAnnouncer'); // ✅ renamed and used below
+const twitchAnnouncer = require('./backend/twitchLiveAnnouncer');
 require('./backend/twitchClipListener');
 
-// === 🔧 DASHBOARD SERVER + CALLBACK ===
 const app = express();
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server });
 const PORT = process.env.PORT || 8080;
 let dashboardClients = [];
+
+// ✅ Session Middleware
+app.use(session({
+  secret: process.env.DASHBOARD_SESSION_SECRET || 'keyboard cat',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { maxAge: 2 * 60 * 60 * 1000 } // 2 hours
+}));
+
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname, 'dashboard')));
+
+// ✅ Login page
+app.get('/dashboard/login', (req, res) => {
+  if (req.session.loggedIn) return res.redirect('/dashboard');
+  res.sendFile(path.join(__dirname, 'dashboard', 'login.html'));
+});
+
+// ✅ Login handler
+app.post('/dashboard/login', (req, res) => {
+  const { username, password } = req.body;
+  if (username === process.env.DASHBOARD_USERNAME && password === process.env.DASHBOARD_PASSWORD) {
+    req.session.loggedIn = true;
+    return res.redirect('/dashboard');
+  }
+  res.send('❌ Invalid login. <a href="/dashboard/login">Try again</a>');
+});
+
+// ✅ Logout
+app.get('/dashboard/logout', (req, res) => {
+  req.session.destroy(() => {
+    res.clearCookie('connect.sid');
+    res.redirect('/dashboard/login');
+  });
+});
+
+// ✅ Auth middleware
+function requireAuth(req, res, next) {
+  if (req.session.loggedIn) return next();
+  return res.redirect('/dashboard/login');
+}
+
+// ✅ Serve protected dashboard
+app.get('/dashboard', requireAuth, (req, res) => {
+  res.sendFile(path.join(__dirname, 'dashboard', 'dashboard.html'));
+});
 
 // ✅ Twitch OAuth Callback
 app.get('/callback', async (req, res) => {
@@ -60,33 +106,8 @@ app.get('/callback', async (req, res) => {
   }
 });
 
-// ✅ Secure /dashboard route with basic auth
-app.use('/dashboard', (req, res, next) => {
-  const auth = { login: process.env.DASHBOARD_USERNAME, password: process.env.DASHBOARD_PASSWORD };
-
-  const b64auth = (req.headers.authorization || '').split(' ')[1] || '';
-  const [login, password] = Buffer.from(b64auth, 'base64').toString().split(':');
-
-  if (login && password && login === auth.login && password === auth.password) {
-    return next();
-  }
-
-  res.set('WWW-Authenticate', 'Basic realm="CreatorCore Dashboard"');
-  res.status(401).send('🔒 Access denied');
-});
-
-// ✅ Serve static dashboard files
-app.use('/dashboard', express.static(path.join(__dirname, 'dashboard')));
-
-// ✅ Serve dashboard.html when user visits /dashboard
-app.get('/dashboard', (req, res) => {
-  res.sendFile(path.join(__dirname, 'dashboard', 'dashboard.html'));
-});
-
-// ✅ Redirect "/" to "/dashboard"
-app.get('/', (req, res) => {
-  res.redirect('/dashboard');
-});
+// ✅ Redirect root
+app.get('/', (req, res) => res.redirect('/dashboard'));
 
 wss.on('connection', (ws) => {
   dashboardClients.push(ws);
@@ -118,25 +139,17 @@ console.log('📍 Twitch Redirect URI:', process.env.TWITCH_REDIRECT_URI);
 
 client.once('ready', () => {
   console.log(`🎮 ${client.user.tag} is online`);
-
-  // ✅ Start Twitch live grid updater
   setInterval(() => sendLiveGrid(client), 5 * 60 * 1000);
-
-  // ✅ Start Twitch live announcement embed system
   twitchAnnouncer.init(client);
-
-  // ✅ Start status tracking
   updateStats(client);
   setInterval(() => updateStats(client), 10 * 60 * 1000);
 
-  // ✅ Start free game tracker
   const sharedChannelId = process.env.STEAM_GAMES_CHANNEL_ID;
   if (sharedChannelId) {
     fetchAllFreeGames(client, sharedChannelId);
     setInterval(() => fetchAllFreeGames(client, sharedChannelId), 30 * 60 * 1000);
   }
 
-  // ✅ Start autorole handler
   if (interactionHandler.autoRoleHandler) {
     interactionHandler.autoRoleHandler(client);
   }
@@ -196,7 +209,6 @@ client.on('guildBanAdd', require('./events/guildBanAdd'));
 
 client.login(process.env.BOT_TOKEN);
 
-// === 🚀 LAUNCH DASHBOARD SERVER ===
 server.listen(PORT)
   .once('listening', () => {
     console.log(`🖥️ Dashboard + Callback server running on port ${PORT}`);
@@ -212,7 +224,6 @@ server.listen(PORT)
     }
   });
 
-// === GLOBAL ERROR HANDLING ===
 process.on('unhandledRejection', (reason, promise) => {
   console.error('❌ Unhandled Rejection:', promise, 'Reason:', reason);
 });
