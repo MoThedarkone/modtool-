@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 // === ✅ CLEANED messageCreate.js (HuggingFace removed, OpenRouter kept) ===
+=======
+//events/messaageCreats
+>>>>>>> 33a66b0 (Add login/logout flow and dashboard updatesAdd login/logout flow and dashboard updates)
 require('dotenv').config();
 const fs = require('fs');
 const fetch = require('node-fetch');

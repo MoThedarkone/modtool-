@@ -1,3 +1,4 @@
+//handlers/interactionHandlers
 const fs = require('fs');
 const fetch = require('node-fetch');
 const path = './data/masterList.json';

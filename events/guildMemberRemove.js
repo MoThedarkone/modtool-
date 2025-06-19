@@ -1,3 +1,4 @@
+//events/guildMemebrRemove.js
 module.exports = async function(member) {
   const logChannel = member.guild.channels.cache.find(
     (ch) => ch.name === 'mod-logs' && ch.isTextBased?.()

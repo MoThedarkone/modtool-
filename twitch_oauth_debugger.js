@@ -70,4 +70,8 @@ app.listen(PORT, () => {
 
   console.log("\n🔗 Open this in your browser to start Twitch authorization:");
   console.log(authUrl.toString());
+<<<<<<< HEAD
 });
+=======
+});
+>>>>>>> 33a66b0 (Add login/logout flow and dashboard updatesAdd login/logout flow and dashboard updates)

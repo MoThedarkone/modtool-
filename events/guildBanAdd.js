@@ -1,3 +1,4 @@
+//events/guildBanAdd.js
 module.exports = async function(ban) {
   const { user, guild } = ban;
 
