@@ -2,15 +2,98 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>CreatorCore Dashboard</title>
+  <title>SLAY GBTV Dashboard</title>
   <link rel="stylesheet" href="dashboard.css">
-  <link rel="icon" href="https://media.discordapp.net/attachments/1295047768103977004/1384323653155553360/Untitled_design.png?ex=6854a65e&is=685354de&hm=78ce7eecd35576336bb8aa1a4bf3d2d1bb480bab522872a26b8fbba9c94fd7a0&=&format=webp&quality=lossless" type="image/png">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Minecraft', monospace;
+      background: #111;
+      color: #eee;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 20px;
+      background: #1c1c1c;
+      box-shadow: 0 2px 5px #000;
+    }
+
+    header .brand {
+      display: flex;
+      align-items: center;
+    }
+
+    header img {
+      width: 32px;
+      height: 32px;
+      margin-right: 10px;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 24px;
+      color: gold;
+      letter-spacing: 1px;
+    }
+
+    #logoutBtn {
+      background-color: #333;
+      color: white;
+      padding: 6px 12px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    #logoutBtn:hover {
+      background-color: #555;
+    }
+
+    .tab-container {
+      display: flex;
+      background: #222;
+      border-bottom: 1px solid #444;
+    }
+
+    .tab {
+      flex: 1;
+      text-align: center;
+      padding: 10px;
+      cursor: pointer;
+      background: #2a2a2a;
+      transition: background 0.2s;
+      font-weight: bold;
+      color: #ccc;
+    }
+
+    .tab.active {
+      background: #444;
+      color: #fff;
+    }
+
+    #chatbox {
+      height: 80vh;
+      overflow-y: auto;
+      padding: 10px;
+      background: #1a1a1a;
+      font-family: monospace;
+    }
+
+    .msg.discord { color: #7289da; }
+    .msg.twitch { color: #9146ff; }
+  </style>
 </head>
 <body>
-  <header style="display: flex; align-items: center; flex-direction: column; padding: 20px 0;">
-    <img src="7fa691ce-2bc7-4c1f-94b2-042c1cda91df.png" alt="CC Logo" style="width: 200px;">
-    <h1 style="font-family: 'Press Start 2P', monospace; font-size: 0.8rem; color: gold; margin-top: 10px; text-align: center; letter-spacing: 1px;">SLAY GBTV KREW</h1>
+  <header>
+    <div class="brand">
+      <img src="https://media.discordapp.net/attachments/1295047768103977004/1384323653155553360/Untitled_design.png?format=webp&quality=lossless" alt="SLAY GBTV Logo">
+      <h1>SLAY GBTV</h1>
+    </div>
+    <button id="logoutBtn">Log Out</button>
   </header>
 
   <div class="tab-container">
@@ -20,40 +103,13 @@
 
   <div id="chatbox"></div>
 
+  <script src="dashboard-client.js"></script>
   <script>
-    const protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-    const ws = new WebSocket(`${protocol}://${window.location.hostname}:3002`);
-
-    const chatbox = document.getElementById('chatbox');
-    const tabs = document.querySelectorAll('.tab');
-    let currentPlatform = 'discord';
-
-    function renderMessage(msg) {
-      if (msg.platform !== currentPlatform) return;
-      const div = document.createElement('div');
-      div.className = `msg ${msg.platform}`;
-      const icon = msg.platform === 'discord'
-        ? 'https://cdn-icons-png.flaticon.com/512/2111/2111370.png'
-        : 'https://cdn-icons-png.flaticon.com/512/5968/5968819.png';
-      div.innerHTML = `<img src="${icon}" alt="icon" class="msg-icon" style="width: 18px; vertical-align: middle; margin-right: 6px;"> <span class="platform-tag">[${msg.platform.toUpperCase()}]</span> <strong>${msg.username}</strong>: ${msg.content}`;
-      chatbox.appendChild(div);
-      chatbox.scrollTop = chatbox.scrollHeight;
-    }
-
-    ws.onmessage = (event) => {
-      try {
-        const msg = JSON.parse(event.data);
-        renderMessage(msg);
-      } catch {}
-    };
-
-    tabs.forEach(tab => {
-      tab.onclick = () => {
-        tabs.forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
-        currentPlatform = tab.dataset.platform;
-        chatbox.innerHTML = ''; // In the future, reload messages if stored
-      };
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      fetch('/logout')
+        .then(() => {
+          window.location.href = '/dashboard/login'; // Change this to your login page if different
+        });
     });
   </script>
 </body>
