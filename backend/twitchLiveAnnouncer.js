@@ -1,8 +1,8 @@
-//twitchLiveAnnouncer.js
 require('dotenv').config();
 const fs = require('fs');
 const fetch = require('node-fetch');
 const { EmbedBuilder } = require('discord.js');
+const { getAccessToken } = require('./twitchAuthHelper'); // ✅ Use shared access logic
 
 const masterListPath = './data/masterList.json';
 const postCachePath = './data/liveAnnouncementCache.json';
@@ -14,14 +14,6 @@ if (fs.existsSync(postCachePath)) {
   } catch {
     cache = {};
   }
-}
-
-async function getTwitchAccessToken() {
-  const res = await fetch(`https://id.twitch.tv/oauth2/token?client_id=${process.env.TWITCH_CLIENT_ID}&client_secret=${process.env.TWITCH_SECRET}&grant_type=client_credentials`, {
-    method: 'POST',
-  });
-  const data = await res.json();
-  return data.access_token;
 }
 
 async function getLiveStreamers(usernames, token) {
@@ -66,7 +58,7 @@ async function init(client) {
     }
     const usernames = masterList.map(s => s.username.toLowerCase());
 
-    const token = await getTwitchAccessToken();
+    const token = await getAccessToken(); // ✅ New logic
     const liveNow = await getLiveStreamers(usernames, token);
     const userInfo = await getUserInfo(usernames, token);
 
@@ -90,14 +82,14 @@ async function init(client) {
         const embed = new EmbedBuilder()
           .setTitle(`${s.user_name} is LIVE!`)
           .setURL(`https://twitch.tv/${s.user_login}`)
-          .setColor(0x9146FF) // Electric purple
+          .setColor(0x9146FF)
           .setAuthor({
             name: 'Twitch',
             iconURL: 'https://cdn.discordapp.com/attachments/1295047768103977004/1384323653155553360/Untitled_design.png',
             url: `https://twitch.tv/${s.user_login}`,
           })
           .setThumbnail(user?.profile_image_url || null)
-          .setImage(thumb + `?rand=${Date.now()}`) // Force refresh
+          .setImage(thumb + `?rand=${Date.now()}`)
           .setDescription(`🎮 **${s.game_name || 'Unknown Game'}**\n🗨️ ${s.title}`)
           .addFields({ name: '👥 Viewers', value: `${s.viewer_count}`, inline: true })
           .setTimestamp();
@@ -115,13 +107,13 @@ async function init(client) {
           const msg = await announceChannel.messages.fetch(cache[uname].messageId);
           await msg.delete();
         } catch {
-          // Possibly already gone
+          // Possibly already deleted
         }
         delete cache[uname];
         fs.writeFileSync(postCachePath, JSON.stringify(cache, null, 2));
       }
     }
-  }, 30 * 1000); // Runs every 30 seconds
+  }, 30 * 1000); // 30s interval
 }
 
 module.exports = { init };
