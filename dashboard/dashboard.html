@@ -106,9 +106,12 @@
   <script src="dashboard-client.js"></script>
   <script>
     document.getElementById('logoutBtn').addEventListener('click', () => {
-      fetch('/logout')
+      fetch('/dashboard/logout')
         .then(() => {
-          window.location.href = '/dashboard/login'; // Change this to your login page if different
+          window.location.href = '/dashboard/login';
+        })
+        .catch(() => {
+          alert("⚠️ Failed to log out. Try again.");
         });
     });
   </script>
