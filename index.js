@@ -1,17 +1,10 @@
-<<<<<<< HEAD
-// === ✅ START OF FINAL INDEX FILE ===
-=======
-// === ✅ START OF MERGED INDEX FILE ===
->>>>>>> 33a66b0 (Add login/logout flow and dashboard updatesAdd login/logout flow and dashboard updates)
+// === ✅ START OF INDEX FILE ===
 require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
 const express = require('express');
 const http = require('http');
-<<<<<<< HEAD
 const session = require('express-session');
-=======
->>>>>>> 33a66b0 (Add login/logout flow and dashboard updatesAdd login/logout flow and dashboard updates)
 const { WebSocketServer } = require('ws');
 const fetch = require('node-fetch');
 const { Client, GatewayIntentBits, Partials } = require('discord.js');
@@ -30,7 +23,6 @@ require('./backend/twitchShoutoutManager');
 const twitchAnnouncer = require('./backend/twitchLiveAnnouncer');
 require('./backend/twitchClipListener');
 
-<<<<<<< HEAD
 const app = express();
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server });
@@ -84,17 +76,6 @@ app.get('/dashboard', requireAuth, (req, res) => {
 });
 
 // ✅ Twitch OAuth Callback
-=======
-// === 🔧 DASHBOARD SERVER + CALLBACK ===
-const app = express();
-const server = http.createServer(app);
-const wss = new WebSocketServer({ server });
-const PORT = process.env.PORT || 8080; // ✅ Use 8080 for Northflank
-let dashboardClients = [];
-
-app.use(express.static(path.join(__dirname, '.')));
-
->>>>>>> 33a66b0 (Add login/logout flow and dashboard updatesAdd login/logout flow and dashboard updates)
 app.get('/callback', async (req, res) => {
   const code = req.query.code;
   if (!code) return res.status(400).send("Missing 'code' parameter.");
@@ -125,14 +106,8 @@ app.get('/callback', async (req, res) => {
   }
 });
 
-<<<<<<< HEAD
 // ✅ Redirect root
 app.get('/', (req, res) => res.redirect('/dashboard'));
-=======
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'dashboard.html'));
-});
->>>>>>> 33a66b0 (Add login/logout flow and dashboard updatesAdd login/logout flow and dashboard updates)
 
 wss.on('connection', (ws) => {
   dashboardClients.push(ws);
@@ -160,18 +135,6 @@ const client = new Client({
   partials: [Partials.Channel],
 });
 
-<<<<<<< HEAD
-console.log('📍 Twitch Redirect URI:', process.env.TWITCH_REDIRECT_URI);
-
-client.once('ready', () => {
-  console.log(`🎮 ${client.user.tag} is online`);
-  setInterval(() => sendLiveGrid(client), 5 * 60 * 1000);
-  twitchAnnouncer.init(client);
-  updateStats(client);
-  setInterval(() => updateStats(client), 10 * 60 * 1000);
-
-=======
-console.log('🔑 BOT_TOKEN:', process.env.BOT_TOKEN ? '[LOADED]' : '[MISSING]');
 console.log('📍 Twitch Redirect URI:', process.env.TWITCH_REDIRECT_URI);
 
 client.on('huggingfaceApiCall', (username, messageContent) => {
@@ -184,16 +147,13 @@ client.once('ready', () => {
   setInterval(() => announceLiveStreamers(client), 2 * 60 * 1000);
   updateStats(client);
   setInterval(() => updateStats(client), 10 * 60 * 1000);
->>>>>>> 33a66b0 (Add login/logout flow and dashboard updatesAdd login/logout flow and dashboard updates)
+
   const sharedChannelId = process.env.STEAM_GAMES_CHANNEL_ID;
   if (sharedChannelId) {
     fetchAllFreeGames(client, sharedChannelId);
     setInterval(() => fetchAllFreeGames(client, sharedChannelId), 30 * 60 * 1000);
   }
-<<<<<<< HEAD
 
-=======
->>>>>>> 33a66b0 (Add login/logout flow and dashboard updatesAdd login/logout flow and dashboard updates)
   if (interactionHandler.autoRoleHandler) {
     interactionHandler.autoRoleHandler(client);
   }
@@ -231,13 +191,7 @@ client.on('messageCreate', async (message) => {
   }
 
   const badPatterns = [/pornhub/i, /onlyfans/i, /nude/i, /xxx/i, /sex/i, /\.xxx/, /discord\.gg\/[\w-]+/i];
-<<<<<<< HEAD
-  const isMod = message.member?.roles.cache.some(role =>
-    ['MODERATOR', 'ADMIN'].includes(role.name.toUpperCase())
-  );
-=======
   const isMod = message.member?.roles.cache.some(role => ['MODERATOR', 'ADMIN'].includes(role.name.toUpperCase()));
->>>>>>> 33a66b0 (Add login/logout flow and dashboard updatesAdd login/logout flow and dashboard updates)
 
   if (!isMod && badPatterns.some(pat => pat.test(content))) {
     try {
@@ -259,7 +213,6 @@ client.login(process.env.BOT_TOKEN).catch(err => {
   console.error('❌ Discord login failed:', err);
 });
 
-<<<<<<< HEAD
 server.listen(PORT)
   .once('listening', () => {
     console.log(`🖥️ Dashboard + Callback server running on port ${PORT}`);
@@ -275,17 +228,6 @@ server.listen(PORT)
     }
   });
 
-=======
-// === 🚀 LAUNCH DASHBOARD SERVER ===
-server.listen(PORT, () => {
-  console.log(`🖥️ Dashboard + Callback server running on port ${PORT}`);
-  if (process.env.NF_PUBLIC_URL) {
-    console.log(`🌍 Access it here: ${process.env.NF_PUBLIC_URL}`);
-  }
-});
-
-// === GLOBAL ERROR HANDLING ===
->>>>>>> 33a66b0 (Add login/logout flow and dashboard updatesAdd login/logout flow and dashboard updates)
 process.on('unhandledRejection', (reason, promise) => {
   console.error('❌ Unhandled Rejection:', promise, 'Reason:', reason);
 });
@@ -293,8 +235,6 @@ process.on('unhandledRejection', (reason, promise) => {
 process.on('uncaughtException', (err) => {
   console.error('❌ Uncaught Exception:', err);
 });
-<<<<<<< HEAD
+
 // === ✅ END OF FILE ===
-=======
-// === ✅ END OF FILE ===
->>>>>>> 33a66b0 (Add login/logout flow and dashboard updatesAdd login/logout flow and dashboard updates)
+
