@@ -1,84 +1,78 @@
+<!-- dashboard/dashboard.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>🎮 Live Dashboard</title>
+  <meta charset="UTF-8">
+  <title>CreatorCore Dashboard</title>
+  <link rel="stylesheet" href="dashboard.css">
   <style>
     body {
-      background-color: #1e1e2f;
-      color: #fff;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      padding: 2rem;
       margin: 0;
+      font-family: 'Minecraft', monospace;
+      background: #111;
+      color: #eee;
     }
-
-    h1 {
-      color: #9b59b6;
+    header {
+      display: flex;
+      align-items: center;
+      padding: 10px 20px;
+      background: #1c1c1c;
+      box-shadow: 0 2px 5px #000;
     }
-
-    .message {
+    header img {
+      width: 32px;
+      height: 32px;
+      margin-right: 10px;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 24px;
+      color: #9eff80;
+      letter-spacing: 1px;
+    }
+    .tab-container {
+      display: flex;
+      background: #222;
       border-bottom: 1px solid #444;
-      margin-bottom: 1rem;
-      padding-bottom: 1rem;
     }
-
-    .username {
+    .tab {
+      flex: 1;
+      text-align: center;
+      padding: 10px;
+      cursor: pointer;
+      background: #2a2a2a;
+      transition: background 0.2s;
       font-weight: bold;
-      color: #4cd137;
+      color: #ccc;
     }
-
-    .platform {
-      background: #353b48;
-      border-radius: 4px;
-      padding: 2px 6px;
-      font-size: 0.8rem;
-      margin-left: 8px;
-      color: #00a8ff;
+    .tab.active {
+      background: #444;
+      color: #fff;
     }
-
-    .content {
-      margin-top: 4px;
+    #chatbox {
+      height: 80vh;
+      overflow-y: auto;
+      padding: 10px;
+      background: #1a1a1a;
+      font-family: monospace;
     }
+    .msg.discord { color: #7289da; }
+    .msg.twitch { color: #9146ff; }
   </style>
 </head>
 <body>
-  <h1>📡 Chat Relay Dashboard</h1>
-  <div id="messages"></div>
+  <header>
+    <img src="https://static.wikia.nocookie.net/minecraft_gamepedia/images/8/87/Grass_Block_JE3_BE3.png" alt="CC">
+    <h1>CreatorCore Dashboard</h1>
+  </header>
 
-  <script>
-    const messagesDiv = document.getElementById('messages');
-    const socket = new WebSocket(`ws://${location.host}`);
+  <div class="tab-container">
+    <div class="tab active" data-platform="discord">Discord</div>
+    <div class="tab" data-platform="twitch">Twitch</div>
+  </div>
 
-    socket.addEventListener('open', () => {
-      console.log('🧠 [Dashboard] Connected to WebSocket');
-    });
+  <div id="chatbox"></div>
 
-    socket.addEventListener('message', (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        const msgDiv = document.createElement('div');
-        msgDiv.className = 'message';
-
-        msgDiv.innerHTML = `
-          <span class="username">${data.username}</span>
-          <span class="platform">[${data.platform?.toUpperCase() || 'N/A'}]</span>
-          <div class="content">${data.content}</div>
-        `;
-
-        messagesDiv.prepend(msgDiv);
-      } catch (err) {
-        console.error('❌ Failed to render message:', err);
-      }
-    });
-
-    socket.addEventListener('close', () => {
-      console.warn('🔌 [Dashboard] WebSocket connection closed');
-    });
-
-    socket.addEventListener('error', (err) => {
-      console.error('⚠️ [Dashboard] WebSocket error:', err);
-    });
-  </script>
+  <script src="dashboard-client.js"></script>
 </body>
 </html>
