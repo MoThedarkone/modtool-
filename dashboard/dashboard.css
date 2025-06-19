@@ -1,41 +1,66 @@
+/* === Dashboard Styles for CreatorCore === */
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
 body {
-  background: #18181b;
-  color: #fafafa;
-  font-family: 'Segoe UI', Arial, sans-serif;
   margin: 0;
   padding: 0;
+  font-family: 'Press Start 2P', monospace;
+  background: #0f0f0f;
+  color: #eeeeee;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
-#chat-container {
-  max-width: 600px;
-  margin: 32px auto;
-  background: #23272a;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 4px 16px #0006;
-}
+
 h1 {
-  text-align: center;
-  color: #a277ff;
-  margin-bottom: 24px;
+  font-size: 1.2rem;
+  margin: 1rem 0 0.5rem;
+  color: #b084f7;
 }
-#chat-log {
-  height: 380px;
-  overflow-y: scroll;
-  background: #202225;
-  border-radius: 8px;
-  padding: 10px;
-  margin-bottom: 18px;
-  font-size: 1rem;
+
+.tab-container {
+  display: flex;
+  gap: 8px;
+  margin: 1rem 0;
 }
-.chat-message {
-  margin-bottom: 8px;
-  padding: 4px 10px;
+
+.tab {
+  background: #222;
+  border: 2px solid #b084f7;
+  color: #b084f7;
+  padding: 6px 12px;
+  cursor: pointer;
   border-radius: 6px;
+  font-size: 0.6rem;
+  transition: all 0.2s ease-in-out;
 }
-.chat-message.discord { background: #5865F2; color: #fff; }
-.chat-message.twitch { background: #9146FF; color: #fff; }
-.chat-message.youtube { background: #FF0000; color: #fff; }
-.sender {
-  font-weight: bold;
-  margin-right: 8px;
+
+.tab.active,
+.tab:hover {
+  background: #b084f7;
+  color: #111;
+}
+
+#chatbox {
+  width: 90%;
+  max-width: 900px;
+  height: 400px;
+  background: #1c1c1c;
+  border: 2px solid #b084f7;
+  border-radius: 10px;
+  padding: 12px;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  box-shadow: 0 0 10px #b084f7aa;
+}
+
+.msg {
+  margin: 6px 0;
+  line-height: 1.4;
+  word-wrap: break-word;
+}
+
+.platform-tag {
+  color: #777;
+  margin-right: 5px;
 }
