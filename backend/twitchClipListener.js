@@ -1,9 +1,8 @@
-// backend/twitchClipListener.js
 require('dotenv').config();
 const tmi = require('tmi.js');
 const fetch = require('node-fetch');
 const fs = require('fs');
-const { getTwitchAccessToken } = require('./twitchTokenManager'); // 👈 CORRECT
+const { getAccessToken } = require('./twitchAuthHelper'); // ✅ Replaces twitchTokenManager
 
 const twitchChannelsPath = './data/twitchChannels.json';
 
@@ -39,9 +38,9 @@ client.on('chat', async (channel, userstate, message, self) => {
     client.say(channel, '📎 Creating a Twitch clip…');
 
     try {
-      const token = await getTwitchAccessToken();
-      const broadcaster = channel.replace('#', '');
+      const token = await getAccessToken(); // ✅ Now using helper
 
+      const broadcaster = channel.replace('#', '');
       const userResp = await fetch(`https://api.twitch.tv/helix/users?login=${broadcaster}`, {
         headers: {
           'Client-ID': process.env.TWITCH_CLIENT_ID,
