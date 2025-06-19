@@ -16,7 +16,6 @@ const announceLiveStreamers = require('./tasks/announceLiveStreamers');
 const updateStats = require('./events/statusUpdater');
 const { fetchAllFreeGames } = require('./features/freeGamesHandler');
 const messageHandler = require('./events/messageCreate');
-const { relayChatMessage } = require('./dashboard/dashboard');
 
 // 🟩 Twitch integrations
 require('./backend/twitchShoutoutManager');
@@ -29,12 +28,30 @@ const wss = new WebSocketServer({ server });
 const PORT = process.env.PORT || 8080;
 let dashboardClients = [];
 
+// ✅ Embedded dashboard relay logic
+function broadcastToDashboard(msg) {
+  dashboardClients.forEach(ws => {
+    if (ws.readyState === ws.OPEN) ws.send(JSON.stringify(msg));
+  });
+  console.log('📡 [Dashboard] Relayed chat message to clients:', msg);
+}
+
+wss.on('connection', (ws) => {
+  dashboardClients.push(ws);
+  ws.on('close', () => {
+    dashboardClients = dashboardClients.filter(client => client !== ws);
+  });
+  ws.on('error', (err) => {
+    console.error('⚠️ [WebSocket] Client error:', err);
+  });
+});
+
 // ✅ Session Middleware
 app.use(session({
   secret: process.env.DASHBOARD_SESSION_SECRET || 'keyboard cat',
   resave: false,
   saveUninitialized: false,
-  cookie: { maxAge: 2 * 60 * 60 * 1000 } // 2 hours
+  cookie: { maxAge: 2 * 60 * 60 * 1000 }
 }));
 
 app.use(express.urlencoded({ extended: true }));
@@ -108,19 +125,6 @@ app.get('/callback', async (req, res) => {
 
 // ✅ Redirect root
 app.get('/', (req, res) => res.redirect('/dashboard'));
-
-wss.on('connection', (ws) => {
-  dashboardClients.push(ws);
-  ws.on('close', () => {
-    dashboardClients = dashboardClients.filter(client => client !== ws);
-  });
-});
-
-function broadcastToDashboard(msg) {
-  dashboardClients.forEach(ws => {
-    if (ws.readyState === ws.OPEN) ws.send(JSON.stringify(msg));
-  });
-}
 
 // === 🤖 DISCORD CLIENT SETUP ===
 const client = new Client({
