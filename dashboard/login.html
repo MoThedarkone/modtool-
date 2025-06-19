@@ -1,79 +1,97 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>SLAY GBTV Login</title>
+  <meta charset="UTF-8" />
+  <title>SLAY GBTV KREW - Login</title>
   <link rel="stylesheet" href="dashboard.css" />
   <style>
     body {
-      background: #111;
-      color: #fff;
-      font-family: 'Minecraft', monospace;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
       margin: 0;
+      font-family: 'Minecraft', monospace;
+      background: #0a0a0a;
+      color: #eee;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background-image: radial-gradient(circle at center, #1a1a1a 0%, #0a0a0a 100%);
     }
 
-    .login-container {
-      background: #1c1c1c;
-      padding: 30px 40px;
-      border-radius: 12px;
-      box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+    .login-header {
       text-align: center;
-      width: 300px;
+      margin-bottom: 30px;
     }
 
-    .login-container h1 {
+    .login-header img {
+      height: 64px;
+      margin-bottom: 10px;
+    }
+
+    .login-header h1 {
       color: gold;
-      margin-bottom: 20px;
-      font-size: 24px;
+      font-size: 32px;
+      margin: 0;
       letter-spacing: 1px;
     }
 
-    .login-container input[type="text"],
-    .login-container input[type="password"] {
+    .login-box {
+      background: #1c1c1c;
+      border: 2px solid #9146ff;
+      border-radius: 10px;
+      padding: 30px;
+      width: 320px;
+      box-shadow: 0 0 20px #9146ff;
+    }
+
+    .login-box input {
+      display: block;
       width: 100%;
+      margin: 15px 0;
       padding: 10px;
-      margin-bottom: 15px;
+      font-size: 16px;
+      border: none;
+      border-radius: 5px;
       background: #2a2a2a;
-      border: none;
-      border-radius: 5px;
       color: #fff;
+      outline: none;
     }
 
-    .login-container input[type="submit"] {
-      background: gold;
-      border: none;
-      padding: 10px 15px;
+    .login-box button {
+      background: #9146ff;
+      color: white;
+      padding: 10px;
       width: 100%;
-      font-weight: bold;
-      cursor: pointer;
+      border: none;
+      font-size: 16px;
       border-radius: 5px;
-      transition: background 0.2s;
+      cursor: pointer;
+      transition: background 0.3s;
     }
 
-    .login-container input[type="submit"]:hover {
-      background: #ffd700;
+    .login-box button:hover {
+      background: #b96eff;
     }
 
-    .error-message {
-      color: red;
-      margin-top: 10px;
-      font-size: 14px;
+    .footer {
+      margin-top: 30px;
+      font-size: 12px;
+      color: #888;
     }
   </style>
 </head>
 <body>
-  <form class="login-container" method="POST" action="/dashboard/login">
+  <div class="login-header">
+    <img src="https://cdn.discordapp.com/attachments/1295047768103977004/1384323653155553360/Untitled_design.png" alt="SLAY GBTV KREW Logo" />
     <h1>SLAY GBTV KREW</h1>
+  </div>
+
+  <form class="login-box" method="POST" action="/dashboard">
     <input type="text" name="username" placeholder="Username" required />
     <input type="password" name="password" placeholder="Password" required />
-    <input type="submit" value="Login" />
-    <div class="error-message">
-      <!-- Optional: Add logic to show login error if redirected back -->
-    </div>
+    <button type="submit">Log In</button>
   </form>
+
+  <div class="footer">This dashboard is protected. Authorized users only.</div>
 </body>
 </html>
