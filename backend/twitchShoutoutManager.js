@@ -3,11 +3,11 @@ const tmi = require('tmi.js');
 const fetch = require('node-fetch');
 const fs = require('fs');
 const path = require('path');
-const { getTwitchAccessToken } = require('./twitchTokenManager'); // ✅ Uses new dynamic token
+const { getTwitchAccessToken } = require('./twitchTokenManager'); // ✅ USE SHARED TOKEN SYSTEM
 
 // === File Paths ===
-const twitchConfigPath = path.join(__dirname, 'data', 'twitchChannels.json');
-const masterListPath = path.join(__dirname, 'data', 'masterList.json');
+const twitchConfigPath = path.join(__dirname, '../data/twitchChannels.json');
+const masterListPath = path.join(__dirname, '../data/masterList.json');
 
 // === Load Twitch Config ===
 let twitchConfig = {};
@@ -24,7 +24,7 @@ const enabledChannels = Object.entries(twitchConfig)
 const client = new tmi.Client({
   identity: {
     username: process.env.TWITCH_BOT_USERNAME,
-    password: process.env.TWITCH_OAUTH_TOKEN // Still required for IRC
+    password: process.env.TWITCH_OAUTH_TOKEN // ✅ used only for IRC login
   },
   channels: enabledChannels
 });
@@ -50,7 +50,7 @@ function reloadChannels() {
 // === Send Twitch API Shoutout (popup) ===
 async function sendTwitchShoutoutAPI(targetUsername) {
   try {
-    const accessToken = await getTwitchAccessToken(); // ✅ Pull fresh token from token manager
+    const accessToken = await getTwitchAccessToken(); // ✅ GET FROM SHARED TOKEN FILE
 
     const idRes = await fetch(`https://api.twitch.tv/helix/users?login=${targetUsername}`, {
       headers: {
