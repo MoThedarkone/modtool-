@@ -4,13 +4,13 @@
   <meta charset="UTF-8">
   <title>CreatorCore Dashboard</title>
   <link rel="stylesheet" href="dashboard.css">
-  <link rel="icon" href="https://static.wikia.nocookie.net/minecraft_gamepedia/images/8/87/Grass_Block_JE3_BE3.png" type="image/png">
+  <link rel="icon" href="https://media.discordapp.net/attachments/1295047768103977004/1384323653155553360/Untitled_design.png?ex=6854a65e&is=685354de&hm=78ce7eecd35576336bb8aa1a4bf3d2d1bb480bab522872a26b8fbba9c94fd7a0&=&format=webp&quality=lossless" type="image/png">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body>
-  <header>
-    <img src="https://static.wikia.nocookie.net/minecraft_gamepedia/images/8/87/Grass_Block_JE3_BE3.png" alt="CC Logo">
-    <h1>CreatorCore Dashboard</h1>
+  <header style="display: flex; align-items: center; flex-direction: column; padding: 20px 0;">
+    <img src="7fa691ce-2bc7-4c1f-94b2-042c1cda91df.png" alt="CC Logo" style="width: 200px;">
+    <h1 style="font-family: 'Press Start 2P', monospace; font-size: 0.8rem; color: gold; margin-top: 10px; text-align: center; letter-spacing: 1px;">SLAY GBTV KREW</h1>
   </header>
 
   <div class="tab-container">
@@ -35,7 +35,7 @@
       const icon = msg.platform === 'discord'
         ? 'https://cdn-icons-png.flaticon.com/512/2111/2111370.png'
         : 'https://cdn-icons-png.flaticon.com/512/5968/5968819.png';
-      div.innerHTML = `<img src="${icon}" alt="icon" class="msg-icon"> [${msg.platform.toUpperCase()}] <strong>${msg.username}</strong>: ${msg.content}`;
+      div.innerHTML = `<img src="${icon}" alt="icon" class="msg-icon" style="width: 18px; vertical-align: middle; margin-right: 6px;"> <span class="platform-tag">[${msg.platform.toUpperCase()}]</span> <strong>${msg.username}</strong>: ${msg.content}`;
       chatbox.appendChild(div);
       chatbox.scrollTop = chatbox.scrollHeight;
     }
@@ -56,7 +56,6 @@
       };
     });
   </script>
-
 </body>
 </html>
 
