@@ -52,7 +52,7 @@ app.use(session({
 }));
 
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, 'dashboard')));
+app.use('/dashboard', express.static(path.join(__dirname, 'dashboard')));
 
 app.get('/dashboard/login', (req, res) => {
   if (req.session.loggedIn) return res.redirect('/dashboard');
@@ -137,7 +137,7 @@ client.on('huggingfaceApiCall', (username, messageContent) => {
 client.once('ready', () => {
   console.log(`🎮 ${client.user.tag} is online`);
   setInterval(() => sendLiveGrid(client), 5 * 60 * 1000);
-  twitchLiveAnnouncer(client); // ✅ Replaced announceLiveStreamers
+  twitchLiveAnnouncer(client);
   updateStats(client);
   setInterval(() => updateStats(client), 10 * 60 * 1000);
 
@@ -230,4 +230,3 @@ process.on('uncaughtException', (err) => {
 });
 
 // === ✅ END OF FILE ===
-
