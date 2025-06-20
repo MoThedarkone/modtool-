@@ -12,14 +12,13 @@ const { Client, GatewayIntentBits, Partials } = require('discord.js');
 // === 📦 LOCAL MODULES ===
 const interactionHandler = require('./handlers/interactionHandler');
 const sendLiveGrid = require('./tasks/sendLiveGrid');
-const announceLiveStreamers = require('./tasks/announceLiveStreamers');
 const updateStats = require('./events/statusUpdater');
 const { fetchAllFreeGames } = require('./features/freeGamesHandler');
 const messageHandler = require('./events/messageCreate');
 
 // 🟩 Twitch integrations
 require('./backend/twitchShoutoutManager');
-const twitchAnnouncer = require('./backend/twitchLiveAnnouncer');
+const { init: twitchLiveAnnouncer } = require('./backend/twitchLiveAnnouncer');
 require('./backend/twitchClipListener');
 
 const app = express();
@@ -28,7 +27,6 @@ const wss = new WebSocketServer({ server });
 const PORT = process.env.PORT || 8080;
 let dashboardClients = [];
 
-// ✅ Embedded dashboard relay logic
 function broadcastToDashboard(msg) {
   dashboardClients.forEach(ws => {
     if (ws.readyState === ws.OPEN) ws.send(JSON.stringify(msg));
@@ -46,7 +44,6 @@ wss.on('connection', (ws) => {
   });
 });
 
-// ✅ Session Middleware
 app.use(session({
   secret: process.env.DASHBOARD_SESSION_SECRET || 'keyboard cat',
   resave: false,
@@ -57,13 +54,11 @@ app.use(session({
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'dashboard')));
 
-// ✅ Login page
 app.get('/dashboard/login', (req, res) => {
   if (req.session.loggedIn) return res.redirect('/dashboard');
   res.sendFile(path.join(__dirname, 'dashboard', 'login.html'));
 });
 
-// ✅ Login handler
 app.post('/dashboard/login', (req, res) => {
   const { username, password } = req.body;
   if (username === process.env.DASHBOARD_USERNAME && password === process.env.DASHBOARD_PASSWORD) {
@@ -73,7 +68,6 @@ app.post('/dashboard/login', (req, res) => {
   res.send('❌ Invalid login. <a href="/dashboard/login">Try again</a>');
 });
 
-// ✅ Logout
 app.get('/dashboard/logout', (req, res) => {
   req.session.destroy(() => {
     res.clearCookie('connect.sid');
@@ -81,18 +75,15 @@ app.get('/dashboard/logout', (req, res) => {
   });
 });
 
-// ✅ Auth middleware
 function requireAuth(req, res, next) {
   if (req.session.loggedIn) return next();
   return res.redirect('/dashboard/login');
 }
 
-// ✅ Serve protected dashboard
 app.get('/dashboard', requireAuth, (req, res) => {
   res.sendFile(path.join(__dirname, 'dashboard', 'dashboard.html'));
 });
 
-// ✅ Twitch OAuth Callback
 app.get('/callback', async (req, res) => {
   const code = req.query.code;
   if (!code) return res.status(400).send("Missing 'code' parameter.");
@@ -123,10 +114,8 @@ app.get('/callback', async (req, res) => {
   }
 });
 
-// ✅ Redirect root
 app.get('/', (req, res) => res.redirect('/dashboard'));
 
-// === 🤖 DISCORD CLIENT SETUP ===
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -148,7 +137,7 @@ client.on('huggingfaceApiCall', (username, messageContent) => {
 client.once('ready', () => {
   console.log(`🎮 ${client.user.tag} is online`);
   setInterval(() => sendLiveGrid(client), 5 * 60 * 1000);
-  setInterval(() => announceLiveStreamers(client), 2 * 60 * 1000);
+  twitchLiveAnnouncer(client); // ✅ Replaced announceLiveStreamers
   updateStats(client);
   setInterval(() => updateStats(client), 10 * 60 * 1000);
 
