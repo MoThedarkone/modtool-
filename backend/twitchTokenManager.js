@@ -38,10 +38,9 @@ async function refreshTwitchTokenIfNeeded() {
 
   // Only refresh if less than 2.5h left
   const bufferTime = 1000 * 60 * 10; // 10 minutes buffer
-  const refreshThreshold = 1000 * 60 * 60 * 2.5; // 2.5 hours
 
   if (cache.access_token && now < cache.expires_at - bufferTime) {
-    return; // ✅ Still good
+    return; // ✅ Still valid
   }
 
   console.log('🔄 [TwitchTokenManager] Refreshing Twitch token...');
@@ -73,11 +72,14 @@ async function refreshTwitchTokenIfNeeded() {
 
     saveTokenCache(updated);
 
-    // Optional override for IRC (tmi.js)
+    // Override for other modules using process.env (like TMI)
     process.env.TWITCH_OAUTH_TOKEN = updated.access_token;
     process.env.TWITCH_REFRESH_TOKEN = updated.refresh_token;
 
     console.log('✅ [TwitchTokenManager] Token refreshed and saved');
+    console.log('🔑 [ACCESS TOKEN]', updated.access_token); // 🟡 DEBUG ONLY
+    console.log('🔁 [EXPIRES AT]', new Date(updated.expires_at).toLocaleString());
+
   } catch (err) {
     console.error('❌ [TwitchTokenManager] Error refreshing token:', err);
   }
